@@ -33,6 +33,10 @@ dans `travail/`.
 
 ## Démarrage
 
+La toolchain est épinglée sur Rust 1.90.0 (`rust-toolchain.toml`) : rustup l'utilise d'office
+dans ce dossier, encore faut-il qu'elle soit installée
+(`rustup toolchain install 1.90.0 --profile minimal --component rustfmt,clippy`).
+
 ```shell
 cargo build --release
 

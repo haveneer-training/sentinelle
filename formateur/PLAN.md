@@ -96,7 +96,9 @@ Durées, notions et références aux diapositives : `ESTIMATION.local.md` (non v
   Tout le reste se construit sans réseau.
 - `gdb` (Linux ; `rust-gdb` n'est qu'un script) ou lldb autorisé à s'attacher aux processus
   (macOS : `DevToolsSecurity -enable`) ; `perf` ou `samply` pour le profilage.
-- Rust ≥ 1.90 (`rust-version` du workspace), avec `clippy` et `rustfmt`.
+- Rust **1.90.0**, épinglé par `rust-toolchain.toml` (copié dans `travail/`, même version en CI) : à installer
+  sur chaque poste avant la formation, réseau probablement isolé :
+  `rustup toolchain install 1.90.0 --profile minimal --component rustfmt,clippy`.
 
 ## Reste à faire
 

@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+
+# Toutes les étapes compilent avec la toolchain de rust-toolchain.toml (1.90.0, le
+# minimum du programme), la même qu'en local et que dans travail/.
+
+# legacy/ (la v0.1 héritée) est volontairement mal formatée et pleine d'avertissements :
+# c'est le point de départ du TP de refactorisation (module 4). exercices/m1 ne compile
+# pas, par construction ; m2 et m3 sont des todo!(). Tous sont vérifiés autrement :
+# test de caractérisation pour legacy/, `cargo xtask verify` pour les exercices.
+
+jobs:
+  check:
+    name: fmt, clippy, tests
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain épinglée (rust-toolchain.toml)
+        run: rustup toolchain install "$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)" --profile minimal --component rustfmt,clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            formateur/m4-legacy-refactored
+      - name: cargo fmt --check (hors legacy/)
+        run: |
+          cargo fmt --check -p sentinelle -p sentinelle-gen -p xtask -p sentinelle-perf \
+            -p sentinelle-m1 -p sentinelle-m2 -p sentinelle-m3 -p sentinelle-turbo
+          rustfmt --edition 2024 --check formateur/solutions/*/*.rs
+      - name: cargo clippy (hors legacy/ et exercices/)
+        run: >
+          cargo clippy -p sentinelle -p sentinelle-gen -p xtask -p sentinelle-perf -p sentinelle-turbo
+          --all-targets --all-features -- -D warnings
+      - name: cargo test (corrigé, test de caractérisation de legacy/)
+        run: cargo test --workspace --exclude sentinelle-m1
+      - name: cargo bench --no-run (perf/)
+        run: cargo bench --no-run -p sentinelle-perf
+      - name: refactorisation de référence (formateur/m4-legacy-refactored)
+        working-directory: formateur/m4-legacy-refactored
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+
+  exercises:
+    name: exercices courts (xtask verify)
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain épinglée (rust-toolchain.toml)
+        run: rustup toolchain install "$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)" --profile minimal --component rustfmt,clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo xtask verify
+        run: cargo xtask verify
+
+  steps-roundtrip:
+    name: étapes (start → goto → solve)
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain épinglée (rust-toolchain.toml)
+        run: rustup toolchain install "$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)" --profile minimal --component rustfmt,clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: scripts/check-steps.sh
+        run: scripts/check-steps.sh
+
+  criterion:
+    name: variante criterion (perf/criterion)
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain épinglée (rust-toolchain.toml)
+        run: rustup toolchain install "$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)" --profile minimal --component rustfmt,clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: perf/criterion
+      - name: cargo fmt --check, cargo bench --no-run
+        working-directory: perf/criterion
+        run: |
+          cargo fmt --check
+          cargo bench --no-run

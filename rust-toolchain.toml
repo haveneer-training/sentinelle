@@ -1,0 +1,7 @@
+# Même version en local, dans travail/ et en CI : le minimum du programme de la
+# formation (Rust ≥ 1.90, `rust-version` du workspace). Ne la monter que pour un
+# besoin avéré, en même temps que `rust-version`.
+[toolchain]
+channel = "1.90.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

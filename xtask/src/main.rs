@@ -553,10 +553,12 @@ fn make_starter(root: &Path, out: &Path, force: bool) -> Result<(), String> {
             .unwrap_or(false)
     });
     if !is_reference {
-        return Err("ce dépôt ne contient aucun bloc de référence : c'est déjà un dossier de \
+        return Err(
+            "ce dépôt ne contient aucun bloc de référence : c'est déjà un dossier de \
                     travail.\nLancez `cargo xtask start` depuis le dépôt du corrigé, ou \
                     `cargo xtask status` pour voir où vous en êtes."
-            .to_string());
+                .to_string(),
+        );
     }
 
     // Ne jamais détruire le travail de quelqu'un sans le lui demander.
@@ -581,6 +583,7 @@ fn make_starter(root: &Path, out: &Path, force: bool) -> Result<(), String> {
         ".gitignore",
         "Cargo.toml",
         "Cargo.lock",
+        "rust-toolchain.toml",
         "ETAPES.md",
         "README.md",
         "docs",
@@ -779,19 +782,31 @@ fn verify(root: &Path) -> Result<(), String> {
     }
 }
 
-fn verify_module(root: &Path, module: &str, scratch: &Path, failures: &mut Vec<String>) -> Result<(), String> {
+fn verify_module(
+    root: &Path,
+    module: &str,
+    scratch: &Path,
+    failures: &mut Vec<String>,
+) -> Result<(), String> {
     for path in rust_files_in(&root.join("exercices").join(module).join("examples")) {
         let name = format!("{module}/{}", file_stem(&path));
         let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
-        let expected = text.lines().find_map(|l| l.split_once(EXPECTED_ERROR).map(|(_, e)| e.trim().to_string()));
+        let expected = text.lines().find_map(|l| {
+            l.split_once(EXPECTED_ERROR)
+                .map(|(_, e)| e.trim().to_string())
+        });
         let output = rustc(&path, &scratch.join(file_stem(&path)))?;
         let stderr = String::from_utf8_lossy(&output.stderr);
         match (expected, output.status.success()) {
-            (Some(expected), true) => failures.push(format!("{name} : compile, alors qu'il devrait échouer ({expected})")),
-            (Some(expected), false) if !stderr.contains(&expected) => {
-                failures.push(format!("{name} : échoue, mais sans « {expected} »\n{stderr}"))
+            (Some(expected), true) => failures.push(format!(
+                "{name} : compile, alors qu'il devrait échouer ({expected})"
+            )),
+            (Some(expected), false) if !stderr.contains(&expected) => failures.push(format!(
+                "{name} : échoue, mais sans « {expected} »\n{stderr}"
+            )),
+            (Some(expected), false) => {
+                println!("  exercice {name} : échoue comme prévu ({expected})")
             }
-            (Some(expected), false) => println!("  exercice {name} : échoue comme prévu ({expected})"),
             (None, true) => println!("  exercice {name} : compile"),
             (None, false) => failures.push(format!("{name} : ne compile pas\n{stderr}")),
         }
@@ -799,21 +814,31 @@ fn verify_module(root: &Path, module: &str, scratch: &Path, failures: &mut Vec<S
 
     let solutions = rust_files_in(&root.join("formateur/solutions").join(module));
     if solutions.is_empty() {
-        return Err(format!("aucun corrigé dans formateur/solutions/{module} : `verify` s'utilise dans le dépôt du corrigé"));
+        return Err(format!(
+            "aucun corrigé dans formateur/solutions/{module} : `verify` s'utilise dans le dépôt du corrigé"
+        ));
     }
     for path in solutions {
         let name = format!("{module}/{}", file_stem(&path));
         let binary = scratch.join(format!("solution-{}", file_stem(&path)));
         let output = rustc(&path, &binary)?;
         if !output.status.success() {
-            failures.push(format!("corrigé {name} : ne compile pas\n{}", String::from_utf8_lossy(&output.stderr)));
+            failures.push(format!(
+                "corrigé {name} : ne compile pas\n{}",
+                String::from_utf8_lossy(&output.stderr)
+            ));
             continue;
         }
-        let run = std::process::Command::new(&binary).output().map_err(|e| e.to_string())?;
+        let run = std::process::Command::new(&binary)
+            .output()
+            .map_err(|e| e.to_string())?;
         if run.status.success() && String::from_utf8_lossy(&run.stdout).contains("OK") {
             println!("  corrigé {name} : OK");
         } else {
-            failures.push(format!("corrigé {name} : échec à l'exécution\n{}", String::from_utf8_lossy(&run.stderr)));
+            failures.push(format!(
+                "corrigé {name} : échec à l'exécution\n{}",
+                String::from_utf8_lossy(&run.stderr)
+            ));
         }
     }
     Ok(())
@@ -836,5 +861,7 @@ fn rust_files_in(dir: &Path) -> Vec<PathBuf> {
 }
 
 fn file_stem(path: &Path) -> String {
-    path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default()
+    path.file_stem()
+        .map(|s| s.to_string_lossy().into_owned())
+        .unwrap_or_default()
 }
