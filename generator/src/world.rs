@@ -11,13 +11,34 @@ pub struct Host {
 }
 
 pub const HOSTS: [Host; 7] = [
-    Host { name: "bastion-01", ip: Ipv4Addr::new(10, 0, 0, 10) },
-    Host { name: "srv-web-01", ip: Ipv4Addr::new(10, 0, 2, 11) },
-    Host { name: "srv-web-02", ip: Ipv4Addr::new(10, 0, 2, 12) },
-    Host { name: "srv-db-01", ip: Ipv4Addr::new(10, 0, 3, 21) },
-    Host { name: "srv-db-02", ip: Ipv4Addr::new(10, 0, 3, 22) },
-    Host { name: "srv-files-01", ip: Ipv4Addr::new(10, 0, 4, 31) },
-    Host { name: "srv-build-01", ip: Ipv4Addr::new(10, 0, 5, 41) },
+    Host {
+        name: "bastion-01",
+        ip: Ipv4Addr::new(10, 0, 0, 10),
+    },
+    Host {
+        name: "srv-web-01",
+        ip: Ipv4Addr::new(10, 0, 2, 11),
+    },
+    Host {
+        name: "srv-web-02",
+        ip: Ipv4Addr::new(10, 0, 2, 12),
+    },
+    Host {
+        name: "srv-db-01",
+        ip: Ipv4Addr::new(10, 0, 3, 21),
+    },
+    Host {
+        name: "srv-db-02",
+        ip: Ipv4Addr::new(10, 0, 3, 22),
+    },
+    Host {
+        name: "srv-files-01",
+        ip: Ipv4Addr::new(10, 0, 4, 31),
+    },
+    Host {
+        name: "srv-build-01",
+        ip: Ipv4Addr::new(10, 0, 5, 41),
+    },
 ];
 
 /// Seul point d'entrée SSH depuis l'extérieur.
@@ -29,12 +50,59 @@ pub const CLIENT_DB: usize = 4;
 
 const FIRST_INITIALS: &[u8] = b"abcdefghijlmnoprstvy";
 const SURNAMES: &[&str] = &[
-    "martin", "bernard", "thomas", "petit", "robert", "richard", "durand", "dubois", "moreau",
-    "laurent", "simon", "michel", "lefebvre", "leroy", "roux", "david", "bertrand", "morel",
-    "fournier", "girard", "bonnet", "dupont", "lambert", "fontaine", "rousseau", "vincent",
-    "muller", "faure", "andre", "mercier", "blanc", "guerin", "boyer", "garnier", "chevalier",
-    "legrand", "gauthier", "garcia", "perrin", "robin", "clement", "morin", "nicolas", "henry",
-    "roussel", "mathieu", "masson", "le-gall", "le-goff", "tanguy", "kerjean", "riou", "quere",
+    "martin",
+    "bernard",
+    "thomas",
+    "petit",
+    "robert",
+    "richard",
+    "durand",
+    "dubois",
+    "moreau",
+    "laurent",
+    "simon",
+    "michel",
+    "lefebvre",
+    "leroy",
+    "roux",
+    "david",
+    "bertrand",
+    "morel",
+    "fournier",
+    "girard",
+    "bonnet",
+    "dupont",
+    "lambert",
+    "fontaine",
+    "rousseau",
+    "vincent",
+    "muller",
+    "faure",
+    "andre",
+    "mercier",
+    "blanc",
+    "guerin",
+    "boyer",
+    "garnier",
+    "chevalier",
+    "legrand",
+    "gauthier",
+    "garcia",
+    "perrin",
+    "robin",
+    "clement",
+    "morin",
+    "nicolas",
+    "henry",
+    "roussel",
+    "mathieu",
+    "masson",
+    "le-gall",
+    "le-goff",
+    "tanguy",
+    "kerjean",
+    "riou",
+    "quere",
 ];
 
 pub struct User {
@@ -82,7 +150,11 @@ fn make_users(rng: &mut Rng, count: usize) -> Vec<User> {
     let mut taken = HashSet::new();
     (0..count)
         .map(|i| {
-            let base = format!("{}.{}", *rng.pick(FIRST_INITIALS) as char, rng.pick(SURNAMES));
+            let base = format!(
+                "{}.{}",
+                *rng.pick(FIRST_INITIALS) as char,
+                rng.pick(SURNAMES)
+            );
             let mut name = base.clone();
             let mut suffix = 2;
             while !taken.insert(name.clone()) {
@@ -90,7 +162,11 @@ fn make_users(rng: &mut Rng, count: usize) -> Vec<User> {
                 suffix += 1;
             }
             let admin = rng.chance(0.08);
-            let (pool, max) = if admin { (&all_servers, 6) } else { (&regular_servers, 2) };
+            let (pool, max) = if admin {
+                (&all_servers, 6)
+            } else {
+                (&regular_servers, 2)
+            };
             let mut servers = pool.clone();
             rng.shuffle(&mut servers);
             servers.truncate(rng.range(if admin { 3 } else { 0 }, max + 1) as usize);

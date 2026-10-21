@@ -14,10 +14,10 @@ use crate::web::WebEntry;
 use std::collections::{BTreeMap, HashMap};
 #[cfg_attr(not(feature = "step5"), allow(unused_imports))] // trous étapes 5 et 6
 use std::collections::{HashSet, VecDeque};
-#[cfg_attr(not(feature = "step4"), allow(unused_imports))] // trou étape 4
-use std::{cmp::Reverse, collections::BinaryHeap};
 use std::fmt;
 use std::net::IpAddr;
+#[cfg_attr(not(feature = "step4"), allow(unused_imports))] // trou étape 4
+use std::{cmp::Reverse, collections::BinaryHeap};
 
 // ------------------------------------------------------------------ étape 4
 
@@ -62,7 +62,10 @@ pub fn top_n<K: Ord, V: Ord>(items: impl IntoIterator<Item = (K, V)>, n: usize) 
         }
     }
     // tri croissant des `Reverse(…)`, donc du meilleur au moins bon
-    heap.into_sorted_vec().into_iter().map(|Reverse((value, Reverse(key)))| (key, value)).collect()
+    heap.into_sorted_vec()
+        .into_iter()
+        .map(|Reverse((value, Reverse(key)))| (key, value))
+        .collect()
     // SOLUTION-END
 }
 
@@ -88,7 +91,8 @@ pub fn detect_spraying(entries: &[AuthEntry<'_>], min_accounts: usize) -> Vec<Sp
     for entry in entries {
         if let AuthEvent::Failed { user, ip, .. } = entry.event {
             let ts = entry.timestamp;
-            let (accounts, first, last) = by_ip.entry(ip).or_insert_with(|| (HashSet::new(), ts, ts));
+            let (accounts, first, last) =
+                by_ip.entry(ip).or_insert_with(|| (HashSet::new(), ts, ts));
             accounts.insert(user);
             *first = (*first).min(ts);
             *last = (*last).max(ts);
@@ -97,7 +101,12 @@ pub fn detect_spraying(entries: &[AuthEntry<'_>], min_accounts: usize) -> Vec<Sp
     let mut found: Vec<Spraying> = by_ip
         .into_iter()
         .filter(|(_, (accounts, _, _))| accounts.len() >= min_accounts)
-        .map(|(ip, (accounts, first, last))| Spraying { ip, accounts: accounts.len(), first, last })
+        .map(|(ip, (accounts, first, last))| Spraying {
+            ip,
+            accounts: accounts.len(),
+            first,
+            last,
+        })
         .collect();
     found.sort_by(|a, b| b.accounts.cmp(&a.accounts).then(a.ip.cmp(&b.ip)));
     found
@@ -118,7 +127,11 @@ pub struct BruteForce {
 /// Une rafale se prolonge tant que le seuil reste atteint ; elle n'est rapportée qu'une
 /// fois. Résultat par ordre chronologique de début.
 #[cfg_attr(not(feature = "step5"), allow(unused_variables))] // trou étape 5
-pub fn detect_bruteforce(entries: &[AuthEntry<'_>], window: i64, threshold: usize) -> Vec<BruteForce> {
+pub fn detect_bruteforce(
+    entries: &[AuthEntry<'_>],
+    window: i64,
+    threshold: usize,
+) -> Vec<BruteForce> {
     // TODO-STEP:5 Fenêtre glissante par adresse : un `VecDeque<Timestamp>` des échecs
     // récents (on ajoute à droite, on retire à gauche ce qui est sorti de la fenêtre).
     // Quand la fenêtre atteint le seuil, ouvrir ou prolonger la rafale en cours de
@@ -146,7 +159,12 @@ pub fn detect_bruteforce(entries: &[AuthEntry<'_>], window: i64, threshold: usiz
                 burst.failures += 1;
             }
             _ => {
-                let burst = BruteForce { ip, first: recent[0], last: now, failures: recent.len() };
+                let burst = BruteForce {
+                    ip,
+                    first: recent[0],
+                    last: now,
+                    failures: recent.len(),
+                };
                 found.extend(open.insert(ip, burst));
             }
         }
@@ -172,7 +190,10 @@ pub struct Compromise<'a> {
 /// Connexions réussies (`Accepted`) depuis une adresse ayant déjà cumulé au moins
 /// `min_failures` échecs.
 #[cfg_attr(not(feature = "step6"), allow(unused_variables))] // trou étape 6
-pub fn detect_compromise<'a>(entries: &[AuthEntry<'a>], min_failures: usize) -> Vec<Compromise<'a>> {
+pub fn detect_compromise<'a>(
+    entries: &[AuthEntry<'a>],
+    min_failures: usize,
+) -> Vec<Compromise<'a>> {
     // TODO-STEP:6 Un seul passage : compter les échecs par adresse au fil de l'eau et,
     // à chaque `Accepted`, consulter le compte de son adresse.
     // SOLUTION-BEGIN
@@ -184,7 +205,13 @@ pub fn detect_compromise<'a>(entries: &[AuthEntry<'a>], min_failures: usize) -> 
             AuthEvent::Accepted { user, ip, .. } => {
                 let failures_before = failures.get(&ip).copied().unwrap_or(0);
                 if failures_before >= min_failures {
-                    found.push(Compromise { ip, user, host: entry.host, at: entry.timestamp, failures_before });
+                    found.push(Compromise {
+                        ip,
+                        user,
+                        host: entry.host,
+                        at: entry.timestamp,
+                        failures_before,
+                    });
                 }
             }
             _ => {}
@@ -207,7 +234,10 @@ pub struct NewAccess<'a> {
 /// d'apprentissage (les entrées antérieures à `learn_until`). Chaque nouveau couple n'est
 /// rapporté qu'une fois.
 #[cfg_attr(not(feature = "step6"), allow(unused_variables))] // trou étape 6
-pub fn detect_new_access<'a>(entries: &[AuthEntry<'a>], learn_until: Timestamp) -> Vec<NewAccess<'a>> {
+pub fn detect_new_access<'a>(
+    entries: &[AuthEntry<'a>],
+    learn_until: Timestamp,
+) -> Vec<NewAccess<'a>> {
     // TODO-STEP:6 Un `HashSet<(&str, &str)>` des couples connus : `insert` dit en même
     // temps si le couple était nouveau.
     // SOLUTION-BEGIN
@@ -218,7 +248,12 @@ pub fn detect_new_access<'a>(entries: &[AuthEntry<'a>], learn_until: Timestamp) 
             continue;
         };
         if known.insert((user, entry.host)) && entry.timestamp >= learn_until {
-            found.push(NewAccess { user, host: entry.host, ip, at: entry.timestamp });
+            found.push(NewAccess {
+                user,
+                host: entry.host,
+                ip,
+                at: entry.timestamp,
+            });
         }
     }
     found
@@ -237,7 +272,10 @@ pub struct UnusualSudo<'a> {
 /// Commandes `sudo` lancées après `learn_until` par des comptes qui n'en ont lancé aucune
 /// pendant la période d'apprentissage.
 #[cfg_attr(not(feature = "step6"), allow(unused_variables))] // trou étape 6
-pub fn detect_unusual_sudo<'a>(entries: &[AuthEntry<'a>], learn_until: Timestamp) -> Vec<UnusualSudo<'a>> {
+pub fn detect_unusual_sudo<'a>(
+    entries: &[AuthEntry<'a>],
+    learn_until: Timestamp,
+) -> Vec<UnusualSudo<'a>> {
     // TODO-STEP:6 Deux passages : l'ensemble des comptes habitués à `sudo`, puis les
     // commandes des autres.
     // SOLUTION-BEGIN
@@ -253,9 +291,12 @@ pub fn detect_unusual_sudo<'a>(entries: &[AuthEntry<'a>], learn_until: Timestamp
         .iter()
         .filter(|entry| entry.timestamp >= learn_until)
         .filter_map(|entry| match entry.event {
-            AuthEvent::Sudo { user, command } if !sudoers.contains(user) => {
-                Some(UnusualSudo { user, host: entry.host, command, at: entry.timestamp })
-            }
+            AuthEvent::Sudo { user, command } if !sudoers.contains(user) => Some(UnusualSudo {
+                user,
+                host: entry.host,
+                command,
+                at: entry.timestamp,
+            }),
             _ => None,
         })
         .collect()
@@ -285,11 +326,19 @@ pub fn bytes_by_user_hour<'a>(entries: &[WebEntry<'a>]) -> BTreeMap<(&'a str, Ti
 
 /// Volume servi à `user` pendant les heures commençant dans `[from, to)`.
 #[cfg_attr(not(feature = "step7"), allow(unused_variables))] // trou étape 7
-pub fn user_volume(volumes: &BTreeMap<(&str, Timestamp), u64>, user: &str, from: Timestamp, to: Timestamp) -> u64 {
+pub fn user_volume(
+    volumes: &BTreeMap<(&str, Timestamp), u64>,
+    user: &str,
+    from: Timestamp,
+    to: Timestamp,
+) -> u64 {
     // TODO-STEP:7 Pas de parcours complet : `BTreeMap::range` sur les clés `(user, from)`
     // à `(user, to)`.
     // SOLUTION-BEGIN
-    volumes.range((user, from)..(user, to)).map(|(_, bytes)| bytes).sum()
+    volumes
+        .range((user, from)..(user, to))
+        .map(|(_, bytes)| bytes)
+        .sum()
     // SOLUTION-END
 }
 
@@ -302,7 +351,10 @@ pub struct VolumeSpike<'a> {
 }
 
 /// Les couples (utilisateur, heure) dont le volume atteint `threshold` octets.
-pub fn detect_volume_spikes<'a>(volumes: &BTreeMap<(&'a str, Timestamp), u64>, threshold: u64) -> Vec<VolumeSpike<'a>> {
+pub fn detect_volume_spikes<'a>(
+    volumes: &BTreeMap<(&'a str, Timestamp), u64>,
+    threshold: u64,
+) -> Vec<VolumeSpike<'a>> {
     volumes
         .iter()
         .filter(|&(_, &bytes)| bytes >= threshold)
@@ -339,14 +391,42 @@ impl fmt::Display for Alert<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}  ", Iso(self.at()))?;
         match self {
-            Alert::Spraying(a) => write!(f, "password spraying   {} : {} comptes jusqu'à {}", a.ip, a.accounts, Iso(a.last)),
-            Alert::BruteForce(a) => write!(f, "force brute         {} : {} échecs jusqu'à {}", a.ip, a.failures, Iso(a.last)),
+            Alert::Spraying(a) => write!(
+                f,
+                "password spraying   {} : {} comptes jusqu'à {}",
+                a.ip,
+                a.accounts,
+                Iso(a.last)
+            ),
+            Alert::BruteForce(a) => write!(
+                f,
+                "force brute         {} : {} échecs jusqu'à {}",
+                a.ip,
+                a.failures,
+                Iso(a.last)
+            ),
             Alert::Compromise(a) => {
-                write!(f, "COMPROMISSION       {} sur {} depuis {} après {} échecs", a.user, a.host, a.ip, a.failures_before)
+                write!(
+                    f,
+                    "COMPROMISSION       {} sur {} depuis {} après {} échecs",
+                    a.user, a.host, a.ip, a.failures_before
+                )
             }
-            Alert::NewAccess(a) => write!(f, "accès inédit        {} sur {} depuis {}", a.user, a.host, a.ip),
-            Alert::UnusualSudo(a) => write!(f, "sudo inhabituel     {} sur {} : {}", a.user, a.host, a.command),
-            Alert::VolumeSpike(a) => write!(f, "volume anormal      {} : {} octets dans l'heure", a.user, a.bytes),
+            Alert::NewAccess(a) => write!(
+                f,
+                "accès inédit        {} sur {} depuis {}",
+                a.user, a.host, a.ip
+            ),
+            Alert::UnusualSudo(a) => write!(
+                f,
+                "sudo inhabituel     {} sur {} : {}",
+                a.user, a.host, a.command
+            ),
+            Alert::VolumeSpike(a) => write!(
+                f,
+                "volume anormal      {} : {} octets dans l'heure",
+                a.user, a.bytes
+            ),
         }
     }
 }
@@ -396,14 +476,36 @@ impl Config {
 }
 
 /// Lance toutes les détections et renvoie la chronologie des alertes.
-pub fn analyze<'a>(auth: &[AuthEntry<'a>], web: &[WebEntry<'a>], config: &Config) -> Vec<Alert<'a>> {
+pub fn analyze<'a>(
+    auth: &[AuthEntry<'a>],
+    web: &[WebEntry<'a>],
+    config: &Config,
+) -> Vec<Alert<'a>> {
     let volumes = bytes_by_user_hour(web);
     timeline(vec![
-        detect_spraying(auth, config.spraying_accounts).into_iter().map(Alert::Spraying).collect(),
-        detect_bruteforce(auth, config.brute_window, config.brute_threshold).into_iter().map(Alert::BruteForce).collect(),
-        detect_compromise(auth, config.compromise_failures).into_iter().map(Alert::Compromise).collect(),
-        detect_new_access(auth, config.learn_until).into_iter().map(Alert::NewAccess).collect(),
-        detect_unusual_sudo(auth, config.learn_until).into_iter().map(Alert::UnusualSudo).collect(),
-        detect_volume_spikes(&volumes, config.volume_threshold).into_iter().map(Alert::VolumeSpike).collect(),
+        detect_spraying(auth, config.spraying_accounts)
+            .into_iter()
+            .map(Alert::Spraying)
+            .collect(),
+        detect_bruteforce(auth, config.brute_window, config.brute_threshold)
+            .into_iter()
+            .map(Alert::BruteForce)
+            .collect(),
+        detect_compromise(auth, config.compromise_failures)
+            .into_iter()
+            .map(Alert::Compromise)
+            .collect(),
+        detect_new_access(auth, config.learn_until)
+            .into_iter()
+            .map(Alert::NewAccess)
+            .collect(),
+        detect_unusual_sudo(auth, config.learn_until)
+            .into_iter()
+            .map(Alert::UnusualSudo)
+            .collect(),
+        detect_volume_spikes(&volumes, config.volume_threshold)
+            .into_iter()
+            .map(Alert::VolumeSpike)
+            .collect(),
     ])
 }

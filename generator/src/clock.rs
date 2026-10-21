@@ -62,7 +62,10 @@ mod tests {
     #[test]
     fn known_dates() {
         assert_eq!(days_from_civil(1970, 1, 1), 0);
-        assert_eq!(Iso(days_from_civil(2026, 11, 9) * DAY + 8 * HOUR + 5).to_string(), "2026-11-09T08:00:05Z");
+        assert_eq!(
+            Iso(days_from_civil(2026, 11, 9) * DAY + 8 * HOUR + 5).to_string(),
+            "2026-11-09T08:00:05Z"
+        );
         // le 9 novembre 2026 est un lundi (le 1970-01-01 était un jeudi)
         assert_eq!((days_from_civil(2026, 11, 9) + 3).rem_euclid(7), 0);
     }

@@ -32,27 +32,57 @@ pub fn parse_web_line(line: &str) -> Result<WebEntry<'_>, ParseError> {
     if line.is_empty() {
         return Err(ParseError::Empty);
     }
-    let (ip, rest) = line.split_once(" - ").ok_or(ParseError::MissingField("user"))?;
+    let (ip, rest) = line
+        .split_once(" - ")
+        .ok_or(ParseError::MissingField("user"))?;
     let ip: IpAddr = ip.parse().map_err(|_| ParseError::BadIp)?;
-    let (user, rest) = rest.split_once(" [").ok_or(ParseError::MissingField("timestamp"))?;
+    let (user, rest) = rest
+        .split_once(" [")
+        .ok_or(ParseError::MissingField("timestamp"))?;
     let user = (user != "-").then_some(user);
-    let (timestamp, rest) = rest.split_once("] \"").ok_or(ParseError::MissingField("request"))?;
+    let (timestamp, rest) = rest
+        .split_once("] \"")
+        .ok_or(ParseError::MissingField("request"))?;
     let timestamp = parse_timestamp(timestamp).ok_or(ParseError::BadTimestamp)?;
-    let (request, rest) = rest.split_once("\" ").ok_or(ParseError::MissingField("status"))?;
-    let (method, rest_of_request) = request.split_once(' ').ok_or(ParseError::MissingField("path"))?;
-    let (path, _protocol) = rest_of_request.rsplit_once(' ').ok_or(ParseError::MissingField("protocol"))?;
+    let (request, rest) = rest
+        .split_once("\" ")
+        .ok_or(ParseError::MissingField("status"))?;
+    let (method, rest_of_request) = request
+        .split_once(' ')
+        .ok_or(ParseError::MissingField("path"))?;
+    let (path, _protocol) = rest_of_request
+        .rsplit_once(' ')
+        .ok_or(ParseError::MissingField("protocol"))?;
 
     let mut numbers = rest.split(' ');
-    let mut next = |name: &'static str| numbers.next().filter(|s| !s.is_empty()).ok_or(ParseError::MissingField(name));
-    let status = next("status")?.parse().map_err(|_| ParseError::BadNumber("status"))?;
+    let mut next = |name: &'static str| {
+        numbers
+            .next()
+            .filter(|s| !s.is_empty())
+            .ok_or(ParseError::MissingField(name))
+    };
+    let status = next("status")?
+        .parse()
+        .map_err(|_| ParseError::BadNumber("status"))?;
     let bytes = match next("bytes")? {
         "-" => None,
         bytes => Some(bytes.parse().map_err(|_| ParseError::BadNumber("bytes"))?),
     };
-    let duration_ms = next("duration")?.parse().map_err(|_| ParseError::BadNumber("duration"))?;
+    let duration_ms = next("duration")?
+        .parse()
+        .map_err(|_| ParseError::BadNumber("duration"))?;
     if numbers.next().is_some() {
         return Err(ParseError::BadNumber("champ en trop"));
     }
-    Ok(WebEntry { ip, user, timestamp, method, path, status, bytes, duration_ms })
+    Ok(WebEntry {
+        ip,
+        user,
+        timestamp,
+        method,
+        path,
+        status,
+        bytes,
+        duration_ms,
+    })
     // SOLUTION-END
 }

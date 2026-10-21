@@ -16,7 +16,10 @@ fn label(session: &Session) -> &str {
 }
 
 fn main() {
-    let session = Session { user: "l.roux".into(), host: "srv-db-02".into() };
+    let session = Session {
+        user: "l.roux".into(),
+        host: "srv-db-02".into(),
+    };
     assert_eq!(label(&session), "l.roux@srv-db-02");
     println!("ex05 : OK");
 }

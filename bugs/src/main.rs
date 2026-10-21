@@ -16,7 +16,11 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 fn option(args: &[String], name: &str, default: usize) -> usize {
-    args.iter().position(|a| a == name).and_then(|i| args.get(i + 1)).and_then(|v| v.parse().ok()).unwrap_or(default)
+    args.iter()
+        .position(|a| a == name)
+        .and_then(|i| args.get(i + 1))
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default)
 }
 
 fn main() -> ExitCode {

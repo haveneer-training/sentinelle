@@ -47,6 +47,9 @@ fn brute_force_address_comes_first() {
     let journal = parse_auth(&data.auth);
     let top = top_n(failures_by_ip(&journal.entries), 2);
     let scenario = &data.generated.scenario;
-    assert_eq!(top[0], (IpAddr::V4(scenario.brute_ip), scenario.brute.2 as usize));
+    assert_eq!(
+        top[0],
+        (IpAddr::V4(scenario.brute_ip), scenario.brute.2 as usize)
+    );
     assert_eq!(top[1].0, IpAddr::V4(scenario.spray_ip));
 }

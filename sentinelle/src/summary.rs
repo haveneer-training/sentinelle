@@ -13,9 +13,9 @@ use std::io::{self, BufRead};
 use std::net::IpAddr;
 use std::ops::Range;
 use std::sync::Arc;
-use std::sync::mpsc::SyncSender;
 #[cfg_attr(not(feature = "step10"), allow(unused_imports))] // trou étape 10
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::mpsc::SyncSender;
 #[cfg_attr(not(feature = "step9"), allow(unused_imports))] // trous étapes 9 et 10
 use std::sync::{Mutex, mpsc};
 #[cfg_attr(not(feature = "step8"), allow(unused_imports))] // trous étapes 8 à 10
@@ -37,7 +37,12 @@ pub struct Summary<U: Eq + Hash> {
 // pas de `#[derive(Default)]` : il exigerait `U: Default`, inutile ici
 impl<U: Eq + Hash> Default for Summary<U> {
     fn default() -> Self {
-        Self { lines: 0, errors: 0, failures_by_ip: HashMap::new(), accounts_by_ip: HashMap::new() }
+        Self {
+            lines: 0,
+            errors: 0,
+            failures_by_ip: HashMap::new(),
+            accounts_by_ip: HashMap::new(),
+        }
     }
 }
 
@@ -48,12 +53,17 @@ impl<U: Eq + Hash> Summary<U> {
         U: From<&'b str>,
     {
         self.lines += 1;
-        let parsed = std::str::from_utf8(line).map_err(|_| ParseError::InvalidUtf8).and_then(parse_auth_line);
+        let parsed = std::str::from_utf8(line)
+            .map_err(|_| ParseError::InvalidUtf8)
+            .and_then(parse_auth_line);
         match parsed {
             Ok(entry) => {
                 if let AuthEvent::Failed { user, ip, .. } = entry.event {
                     *self.failures_by_ip.entry(ip).or_insert(0) += 1;
-                    self.accounts_by_ip.entry(ip).or_default().insert(U::from(user));
+                    self.accounts_by_ip
+                        .entry(ip)
+                        .or_default()
+                        .insert(U::from(user));
                 }
             }
             Err(_) => self.errors += 1,
@@ -100,7 +110,10 @@ pub fn split_chunks(text: &[u8], parts: usize) -> Vec<&[u8]> {
     let mut chunks = Vec::with_capacity(parts);
     let mut rest = text;
     while !rest.is_empty() {
-        let cut = match rest.get(target..).and_then(|tail| tail.iter().position(|&b| b == b'\n')) {
+        let cut = match rest
+            .get(target..)
+            .and_then(|tail| tail.iter().position(|&b| b == b'\n'))
+        {
             Some(newline) => target + newline + 1,
             None => rest.len(),
         };
@@ -123,7 +136,10 @@ pub fn summarize_scoped(text: &[u8], threads: usize) -> Summary<&str> {
     // SOLUTION-BEGIN
     let chunks = split_chunks(text, threads);
     thread::scope(|scope| {
-        let handles: Vec<_> = chunks.into_iter().map(|chunk| scope.spawn(move || summarize(chunk))).collect();
+        let handles: Vec<_> = chunks
+            .into_iter()
+            .map(|chunk| scope.spawn(move || summarize(chunk)))
+            .collect();
         let mut total = Summary::default();
         for handle in handles {
             total.merge(handle.join().expect("un thread d'analyse a paniqué"));
@@ -136,7 +152,11 @@ pub fn summarize_scoped(text: &[u8], threads: usize) -> Summary<&str> {
 /// Lit `reader` par blocs d'au plus `lines_per_block` lignes complètes et les envoie
 /// dans `blocks`, jusqu'à la fin du flux.
 #[cfg_attr(not(feature = "step9"), allow(dead_code))] // à appeler dans le trou de l'étape 9
-fn read_blocks(mut reader: impl BufRead, lines_per_block: usize, blocks: SyncSender<Vec<u8>>) -> io::Result<()> {
+fn read_blocks(
+    mut reader: impl BufRead,
+    lines_per_block: usize,
+    blocks: SyncSender<Vec<u8>>,
+) -> io::Result<()> {
     loop {
         let mut block = Vec::new();
         for _ in 0..lines_per_block {
@@ -158,7 +178,11 @@ fn read_blocks(mut reader: impl BufRead, lines_per_block: usize, blocks: SyncSen
 /// Le flux n'est jamais entièrement en mémoire. Les blocs sont détruits après analyse :
 /// les noms de compte doivent donc être copiés (`Summary<String>`).
 #[cfg_attr(not(feature = "step9"), allow(unused_variables))] // trou étape 9
-pub fn summarize_pipeline<R: BufRead + Send>(reader: R, workers: usize, lines_per_block: usize) -> io::Result<Summary<String>> {
+pub fn summarize_pipeline<R: BufRead + Send>(
+    reader: R,
+    workers: usize,
+    lines_per_block: usize,
+) -> io::Result<Summary<String>> {
     // TODO-STEP:9 Deux canaux : `mpsc::sync_channel` (borné) pour les blocs, `mpsc::channel`
     // pour les résumés partiels. Un `Receiver` n'a qu'un seul propriétaire : les travailleurs
     // se partagent celui des blocs derrière un `Mutex` (avec `thread::spawn`, il faudrait en
@@ -248,7 +272,8 @@ pub fn summarize_shared(text: Arc<Vec<u8>>, threads: usize) -> Summary<String> {
     for handle in handles {
         handle.join().expect("un thread d'analyse a paniqué");
     }
-    let mutex = Arc::try_unwrap(shared).unwrap_or_else(|_| unreachable!("tous les threads sont terminés"));
+    let mutex =
+        Arc::try_unwrap(shared).unwrap_or_else(|_| unreachable!("tous les threads sont terminés"));
     mutex.into_inner().expect("verrou empoisonné")
     // SOLUTION-END
 }
@@ -259,7 +284,12 @@ pub fn summarize_shared(text: Arc<Vec<u8>>, threads: usize) -> Summary<String> {
 /// traitées ; un dernier appel, une fois tout terminé, donne le total. Les valeurs
 /// transmises ne décroissent jamais.
 #[cfg_attr(not(feature = "step10"), allow(unused_variables))] // trou étape 10
-pub fn summarize_with_progress(text: &[u8], threads: usize, period: Duration, report: impl Fn(usize) + Sync) -> Summary<&str> {
+pub fn summarize_with_progress(
+    text: &[u8],
+    threads: usize,
+    period: Duration,
+    report: impl Fn(usize) + Sync,
+) -> Summary<&str> {
     // TODO-STEP:10 Un `AtomicUsize` incrémenté par les threads d'analyse (`fetch_add`), un
     // `AtomicBool` d'arrêt pour le thread rapporteur (`load` / `store`, `thread::sleep`).
     // Tout tient dans un `thread::scope`. Pour que le dernier appel soit bien le total,

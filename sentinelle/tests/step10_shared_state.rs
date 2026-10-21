@@ -3,7 +3,9 @@
 
 mod common;
 
-use sentinelle::summary::{Summary, chunk_ranges, summarize, summarize_shared, summarize_with_progress};
+use sentinelle::summary::{
+    Summary, chunk_ranges, summarize, summarize_shared, summarize_with_progress,
+};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -16,7 +18,15 @@ fn owned(summary: Summary<&str>) -> Summary<String> {
         accounts_by_ip: summary
             .accounts_by_ip
             .into_iter()
-            .map(|(ip, accounts)| (ip, accounts.into_iter().map(String::from).collect::<HashSet<_>>()))
+            .map(|(ip, accounts)| {
+                (
+                    ip,
+                    accounts
+                        .into_iter()
+                        .map(String::from)
+                        .collect::<HashSet<_>>(),
+                )
+            })
             .collect(),
     }
 }
@@ -36,9 +46,17 @@ fn shared_summary_equals_sequential() {
         let expected = owned(summarize(&data.auth));
         let text = Arc::new(data.auth.clone());
         for threads in [1, 4] {
-            assert_eq!(summarize_shared(Arc::clone(&text), threads), expected, "{threads} threads");
+            assert_eq!(
+                summarize_shared(Arc::clone(&text), threads),
+                expected,
+                "{threads} threads"
+            );
         }
-        assert_eq!(Arc::strong_count(&text), 1, "les threads ont rendu leurs Arc");
+        assert_eq!(
+            Arc::strong_count(&text),
+            1,
+            "les threads ont rendu leurs Arc"
+        );
     }
 }
 
@@ -46,7 +64,9 @@ fn shared_summary_equals_sequential() {
 fn progress_is_monotonic_and_ends_with_the_total() {
     let data = common::dataset();
     let reports = Mutex::new(Vec::new());
-    let summary = summarize_with_progress(&data.auth, 4, Duration::from_millis(1), |n| reports.lock().unwrap().push(n));
+    let summary = summarize_with_progress(&data.auth, 4, Duration::from_millis(1), |n| {
+        reports.lock().unwrap().push(n)
+    });
     assert_eq!(summary, summarize(&data.auth));
     let reports = reports.into_inner().unwrap();
     assert!(reports.windows(2).all(|w| w[0] <= w[1]), "{reports:?}");

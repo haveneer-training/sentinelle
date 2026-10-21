@@ -25,9 +25,17 @@ pub struct AuthEntry<'a> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuthEvent<'a> {
     /// `Accepted METHOD for USER from IP port PORT ssh2`
-    Accepted { user: &'a str, ip: IpAddr, method: &'a str },
+    Accepted {
+        user: &'a str,
+        ip: IpAddr,
+        method: &'a str,
+    },
     /// `Failed password for [invalid user] USER from IP port PORT ssh2`
-    Failed { user: &'a str, ip: IpAddr, invalid_user: bool },
+    Failed {
+        user: &'a str,
+        ip: IpAddr,
+        invalid_user: bool,
+    },
     /// `Invalid user USER from IP port PORT`, toujours suivi d'un `Failed` sur le même compte.
     InvalidUser { user: &'a str, ip: IpAddr },
     /// `pam_unix(sshd:session): session opened for user USER(uid=UID) by (uid=0)`
@@ -68,10 +76,16 @@ pub fn parse_auth_line(line: &str) -> Result<AuthEntry<'_>, ParseError> {
     if line.is_empty() {
         return Err(ParseError::Empty);
     }
-    let (timestamp, rest) = line.split_once(' ').ok_or(ParseError::MissingField("host"))?;
+    let (timestamp, rest) = line
+        .split_once(' ')
+        .ok_or(ParseError::MissingField("host"))?;
     let timestamp = parse_timestamp(timestamp).ok_or(ParseError::BadTimestamp)?;
-    let (host, rest) = rest.split_once(' ').ok_or(ParseError::MissingField("process"))?;
-    let (tag, message) = rest.split_once(": ").ok_or(ParseError::MissingField("message"))?;
+    let (host, rest) = rest
+        .split_once(' ')
+        .ok_or(ParseError::MissingField("process"))?;
+    let (tag, message) = rest
+        .split_once(": ")
+        .ok_or(ParseError::MissingField("message"))?;
     let (process, pid) = match tag.split_once('[') {
         Some((process, pid)) => {
             let pid = pid.strip_suffix(']').and_then(|pid| pid.parse().ok());
@@ -79,7 +93,13 @@ pub fn parse_auth_line(line: &str) -> Result<AuthEntry<'_>, ParseError> {
         }
         None => (tag, None),
     };
-    Ok(AuthEntry { timestamp, host, process, pid, event: parse_auth_event(message)? })
+    Ok(AuthEntry {
+        timestamp,
+        host,
+        process,
+        pid,
+        event: parse_auth_event(message)?,
+    })
     // SOLUTION-END
 }
 
@@ -97,19 +117,59 @@ pub fn parse_auth_event(message: &str) -> Result<AuthEvent<'_>, ParseError> {
     let words: Vec<&str> = message.split_whitespace().collect();
     let ip = |text: &str| text.parse::<IpAddr>().map_err(|_| ParseError::BadIp);
     let event = match words[..] {
-        ["Accepted", method, "for", user, "from", addr, ..] => AuthEvent::Accepted { user, ip: ip(addr)?, method },
-        ["Failed", "password", "for", "invalid", "user", user, "from", addr, ..] => {
-            AuthEvent::Failed { user, ip: ip(addr)?, invalid_user: true }
-        }
-        ["Failed", "password", "for", user, "from", addr, ..] => AuthEvent::Failed { user, ip: ip(addr)?, invalid_user: false },
-        ["Invalid", "user", user, "from", addr, ..] => AuthEvent::InvalidUser { user, ip: ip(addr)? },
-        ["pam_unix(sshd:session):", "session", "opened", "for", "user", user_uid, ..] => {
+        ["Accepted", method, "for", user, "from", addr, ..] => AuthEvent::Accepted {
+            user,
+            ip: ip(addr)?,
+            method,
+        },
+        [
+            "Failed",
+            "password",
+            "for",
+            "invalid",
+            "user",
+            user,
+            "from",
+            addr,
+            ..,
+        ] => AuthEvent::Failed {
+            user,
+            ip: ip(addr)?,
+            invalid_user: true,
+        },
+        ["Failed", "password", "for", user, "from", addr, ..] => AuthEvent::Failed {
+            user,
+            ip: ip(addr)?,
+            invalid_user: false,
+        },
+        ["Invalid", "user", user, "from", addr, ..] => AuthEvent::InvalidUser {
+            user,
+            ip: ip(addr)?,
+        },
+        [
+            "pam_unix(sshd:session):",
+            "session",
+            "opened",
+            "for",
+            "user",
+            user_uid,
+            ..,
+        ] => {
             let user = user_uid.split_once('(').map_or(user_uid, |(user, _)| user);
             AuthEvent::SessionOpened { user }
         }
-        ["pam_unix(sshd:session):", "session", "closed", "for", "user", user] => AuthEvent::SessionClosed { user },
+        [
+            "pam_unix(sshd:session):",
+            "session",
+            "closed",
+            "for",
+            "user",
+            user,
+        ] => AuthEvent::SessionClosed { user },
         [user, ":", tty, ..] if tty.starts_with("TTY=") => {
-            let (_, command) = message.split_once("COMMAND=").ok_or(ParseError::MissingField("COMMAND"))?;
+            let (_, command) = message
+                .split_once("COMMAND=")
+                .ok_or(ParseError::MissingField("COMMAND"))?;
             AuthEvent::Sudo { user, command }
         }
         _ => AuthEvent::Other(message),

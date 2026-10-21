@@ -26,7 +26,9 @@ impl fmt::Display for LoadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             LoadError::Io { path, source } => write!(f, "{} : {source}", path.display()),
-            LoadError::InvalidUtf8 { path, offset } => write!(f, "{} : UTF-8 invalide à l'octet {offset}", path.display()),
+            LoadError::InvalidUtf8 { path, offset } => {
+                write!(f, "{} : UTF-8 invalide à l'octet {offset}", path.display())
+            }
         }
     }
 }
@@ -42,6 +44,12 @@ impl std::error::Error for LoadError {
 
 /// Lit un fichier texte en signalant précisément ce qui échoue.
 pub(crate) fn read_text(path: &Path) -> Result<String, LoadError> {
-    let bytes = std::fs::read(path).map_err(|source| LoadError::Io { path: path.to_owned(), source })?;
-    String::from_utf8(bytes).map_err(|e| LoadError::InvalidUtf8 { path: path.to_owned(), offset: e.utf8_error().valid_up_to() })
+    let bytes = std::fs::read(path).map_err(|source| LoadError::Io {
+        path: path.to_owned(),
+        source,
+    })?;
+    String::from_utf8(bytes).map_err(|e| LoadError::InvalidUtf8 {
+        path: path.to_owned(),
+        offset: e.utf8_error().valid_up_to(),
+    })
 }

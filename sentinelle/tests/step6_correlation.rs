@@ -52,10 +52,21 @@ fn reconstructs_the_intrusion() {
 
     let new_access = detect_new_access(&journal.entries, config.learn_until);
     for host in ["bastion-01", "srv-db-02"] {
-        assert!(new_access.iter().any(|a| a.user == victim && a.host == host), "rebond vers {host} manqué");
+        assert!(
+            new_access
+                .iter()
+                .any(|a| a.user == victim && a.host == host),
+            "rebond vers {host} manqué"
+        );
     }
 
     let sudo = detect_unusual_sudo(&journal.entries, config.learn_until);
-    assert!(sudo.iter().all(|s| s.user == victim), "faux positifs : {sudo:?}");
-    assert!(sudo.iter().any(|s| s.host == "srv-db-02" && s.command.contains("pg_dump")));
+    assert!(
+        sudo.iter().all(|s| s.user == victim),
+        "faux positifs : {sudo:?}"
+    );
+    assert!(
+        sudo.iter()
+            .any(|s| s.host == "srv-db-02" && s.command.contains("pg_dump"))
+    );
 }

@@ -16,7 +16,11 @@ pub struct AuthEntry {
 }
 
 fn field(parts: &Vec<String>, i: usize) -> String {
-    if i < parts.len() { parts[i].clone() } else { String::new() }
+    if i < parts.len() {
+        parts[i].clone()
+    } else {
+        String::new()
+    }
 }
 
 pub fn parse_auth_line(line: String) -> Option<AuthEntry> {
@@ -53,7 +57,15 @@ pub fn parse_auth_line(line: String) -> Option<AuthEntry> {
         user = field(&parts, 5);
         ip = field(&parts, 7);
     }
-    Some(AuthEntry { timestamp: timestamp, host: host, process: process, message: message, kind: kind, user: user, ip: ip })
+    Some(AuthEntry {
+        timestamp: timestamp,
+        host: host,
+        process: process,
+        message: message,
+        kind: kind,
+        user: user,
+        ip: ip,
+    })
 }
 
 pub fn count_failures_by_ip(entries: Vec<AuthEntry>) -> Vec<(String, i32)> {
@@ -79,5 +91,7 @@ pub fn count_failures_by_ip(entries: Vec<AuthEntry>) -> Vec<(String, i32)> {
 
 /// Toutes les entrées d'un texte, comme le fait `main` dans la v0.1.
 pub fn parse_all(text: &str) -> Vec<AuthEntry> {
-    text.lines().filter_map(|line| parse_auth_line(line.to_string())).collect()
+    text.lines()
+        .filter_map(|line| parse_auth_line(line.to_string()))
+        .collect()
 }

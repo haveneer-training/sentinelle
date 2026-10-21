@@ -15,7 +15,14 @@ pub fn dataset() -> &'static Dataset {
 pub fn dataset_with_invalid_utf8() -> &'static Dataset {
     static DATASET: OnceLock<Dataset> = OnceLock::new();
     DATASET.get_or_init(|| {
-        Dataset::generate(&Options { seed: 7, users: 40, noise: 0.3, malformed: 0.01, invalid_utf8: true, ..Options::default() })
+        Dataset::generate(&Options {
+            seed: 7,
+            users: 40,
+            noise: 0.3,
+            malformed: 0.01,
+            invalid_utf8: true,
+            ..Options::default()
+        })
     })
 }
 

@@ -9,7 +9,8 @@ fn before<'a>(line: &'a str, separator: &str) -> &'a str {
 }
 
 fn main() {
-    let line = String::from("2026-11-12T01:42:24Z srv-db-02 sudo: l.roux : COMMAND=/usr/bin/pg_dump");
+    let line =
+        String::from("2026-11-12T01:42:24Z srv-db-02 sudo: l.roux : COMMAND=/usr/bin/pg_dump");
     let head;
     {
         let separator = String::from(" sudo:");

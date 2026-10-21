@@ -20,6 +20,9 @@ fn main() {
         let worst_line = text.lines().find(|l| l.starts_with("Failed")).unwrap_or("");
         report = Report { worst_line };
     }
-    assert_eq!(report.worst_line, "Failed password for root from 192.0.2.67");
+    assert_eq!(
+        report.worst_line,
+        "Failed password for root from 192.0.2.67"
+    );
     println!("ex07 : OK");
 }

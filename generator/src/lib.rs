@@ -29,7 +29,14 @@ pub struct Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Self { seed: 42, users: 150, days: 7, noise: 1.0, malformed: 0.0005, invalid_utf8: false }
+        Self {
+            seed: 42,
+            users: 150,
+            days: 7,
+            noise: 1.0,
+            malformed: 0.0005,
+            invalid_utf8: false,
+        }
     }
 }
 
@@ -49,7 +56,11 @@ pub struct Counts {
 
 /// Écrit les deux journaux dans `auth` et `access`.
 pub fn generate(opts: &Options, auth: impl Write, access: impl Write) -> io::Result<Generated> {
-    assert!(opts.days >= scenario::MIN_DAYS, "il faut au moins {} jours", scenario::MIN_DAYS);
+    assert!(
+        opts.days >= scenario::MIN_DAYS,
+        "il faut au moins {} jours",
+        scenario::MIN_DAYS
+    );
     let mut rng = Rng::new(opts.seed);
     let world = World::new(&mut rng.fork(), opts.users, opts.days);
     let (scenario, attack) = scenario::play(&world, &mut rng.fork());
@@ -72,14 +83,26 @@ pub fn generate(opts: &Options, auth: impl Write, access: impl Write) -> io::Res
         let mut batch = Batch::default();
         events::normal_day(&mut batch, &world, &mut activity, day);
         events::cron_day(&mut batch, &world, &mut activity, day);
-        events::noise_day(&mut batch, &world, &mut activity, day, opts.noise, &excluded);
+        events::noise_day(
+            &mut batch,
+            &world,
+            &mut activity,
+            day,
+            opts.noise,
+            &excluded,
+        );
         batch.append(attack);
         auth.write(batch.auth)?;
         access.write(batch.access)?;
     }
     auth.out.flush()?;
     access.out.flush()?;
-    Ok(Generated { world, scenario, auth: auth.counts, access: access.counts })
+    Ok(Generated {
+        world,
+        scenario,
+        auth: auth.counts,
+        access: access.counts,
+    })
 }
 
 /// Journaux engendrés en mémoire, avec leur vérité terrain.
@@ -93,12 +116,21 @@ impl Dataset {
     pub fn generate(opts: &Options) -> Self {
         let (mut auth, mut access) = (Vec::new(), Vec::new());
         let generated = generate(opts, &mut auth, &mut access).expect("écriture en mémoire");
-        Self { auth, access, generated }
+        Self {
+            auth,
+            access,
+            generated,
+        }
     }
 
     /// Petit jeu de données, rapide à engendrer et à analyser dans un test.
     pub fn small(seed: u64) -> Self {
-        Self::generate(&Options { seed, users: 40, noise: 0.3, ..Options::default() })
+        Self::generate(&Options {
+            seed,
+            users: 40,
+            noise: 0.3,
+            ..Options::default()
+        })
     }
 }
 
@@ -113,7 +145,13 @@ struct Sink<W: Write> {
 
 impl<W: Write> Sink<W> {
     fn new(out: W, rng: Rng, opts: &Options) -> Self {
-        Self { out, rng, malformed: opts.malformed, invalid_utf8: opts.invalid_utf8, counts: Counts::default() }
+        Self {
+            out,
+            rng,
+            malformed: opts.malformed,
+            invalid_utf8: opts.invalid_utf8,
+            counts: Counts::default(),
+        }
     }
 
     fn write(&mut self, mut lines: Vec<Line>) -> io::Result<()> {

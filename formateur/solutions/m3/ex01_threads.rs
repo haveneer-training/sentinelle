@@ -16,8 +16,14 @@ fn failures(fragment: &str) -> usize {
 
 fn count_with_join() -> usize {
     // les fragments sont `&'static str` : `spawn` peut les emporter
-    let handles: Vec<_> = FRAGMENTS.into_iter().map(|fragment| thread::spawn(move || failures(fragment))).collect();
-    handles.into_iter().map(|h| h.join().expect("thread paniqué")).sum()
+    let handles: Vec<_> = FRAGMENTS
+        .into_iter()
+        .map(|fragment| thread::spawn(move || failures(fragment)))
+        .collect();
+    handles
+        .into_iter()
+        .map(|h| h.join().expect("thread paniqué"))
+        .sum()
 }
 
 fn count_with_mutex() -> usize {

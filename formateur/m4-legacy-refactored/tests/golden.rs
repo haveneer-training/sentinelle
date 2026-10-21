@@ -22,15 +22,24 @@ fn output_is_unchanged() {
     std::fs::write(dir.join("auth.log"), &data.auth).unwrap();
     std::fs::write(dir.join("access.log"), &data.access).unwrap();
 
-    let output = Command::new(env!("CARGO_BIN_EXE_sentinelle-v0")).arg(&dir).output().expect("lancement de sentinelle-v0");
+    let output = Command::new(env!("CARGO_BIN_EXE_sentinelle-v0"))
+        .arg(&dir)
+        .output()
+        .expect("lancement de sentinelle-v0");
     std::fs::remove_dir_all(&dir).ok();
-    assert!(output.status.success(), "échec : {}", String::from_utf8_lossy(&output.stderr));
+    assert!(
+        output.status.success(),
+        "échec : {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
     let actual = String::from_utf8(output.stdout).expect("sortie en UTF-8");
 
-    let golden = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../legacy/tests/golden/expected.txt");
+    let golden =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../legacy/tests/golden/expected.txt");
     if std::env::var_os("UPDATE_GOLDEN").is_some() {
         std::fs::write(&golden, &actual).unwrap();
     }
-    let expected = std::fs::read_to_string(&golden).expect("référence absente : lancer avec UPDATE_GOLDEN=1");
+    let expected =
+        std::fs::read_to_string(&golden).expect("référence absente : lancer avec UPDATE_GOLDEN=1");
     assert_eq!(actual, expected, "la sortie a changé");
 }

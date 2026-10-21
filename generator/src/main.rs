@@ -28,7 +28,11 @@ struct Args {
 }
 
 fn parse_args() -> Result<Args, String> {
-    let mut parsed = Args { out: PathBuf::from("data"), reveal: false, options: Options::default() };
+    let mut parsed = Args {
+        out: PathBuf::from("data"),
+        reveal: false,
+        options: Options::default(),
+    };
     let opts = &mut parsed.options;
     let mut args = std::env::args().skip(1);
     while let Some(arg) = args.next() {
@@ -48,7 +52,10 @@ fn parse_args() -> Result<Args, String> {
         }
     }
     if opts.days < scenario::MIN_DAYS {
-        return Err(format!("--days doit valoir au moins {}", scenario::MIN_DAYS));
+        return Err(format!(
+            "--days doit valoir au moins {}",
+            scenario::MIN_DAYS
+        ));
     }
     Ok(parsed)
 }
@@ -57,14 +64,20 @@ fn run(args: &Args) -> std::io::Result<()> {
     let started = Instant::now();
     let out = &args.out;
     fs::create_dir_all(out)?;
-    let create = |name: &str| File::create(out.join(name)).map(|f| BufWriter::with_capacity(1 << 20, f));
+    let create =
+        |name: &str| File::create(out.join(name)).map(|f| BufWriter::with_capacity(1 << 20, f));
     let generated = generate(&args.options, create("auth.log")?, create("access.log")?)?;
 
     if args.reveal {
-        let mut report = generated.scenario.report(&generated.world, args.options.seed);
+        let mut report = generated
+            .scenario
+            .report(&generated.world, args.options.seed);
         report.push_str(&format!(
             "\nLignes corrompues : {} / {} dans auth.log, {} / {} dans access.log.\n",
-            generated.auth.corrupted, generated.auth.lines, generated.access.corrupted, generated.access.lines
+            generated.auth.corrupted,
+            generated.auth.lines,
+            generated.access.corrupted,
+            generated.access.lines
         ));
         fs::write(out.join("GROUND_TRUTH.md"), report)?;
     }
@@ -80,7 +93,9 @@ fn run(args: &Args) -> std::io::Result<()> {
 }
 
 fn megabytes(path: &Path) -> f64 {
-    fs::metadata(path).map(|m| m.len() as f64 / 1e6).unwrap_or(0.0)
+    fs::metadata(path)
+        .map(|m| m.len() as f64 / 1e6)
+        .unwrap_or(0.0)
 }
 
 fn main() -> ExitCode {

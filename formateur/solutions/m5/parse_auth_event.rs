@@ -18,19 +18,59 @@ pub fn parse_auth_event(message: &str) -> Result<AuthEvent<'_>, ParseError> {
     let words = &buffer[..count];
     let ip = |text: &str| text.parse::<IpAddr>().map_err(|_| ParseError::BadIp);
     let event = match *words {
-        ["Accepted", method, "for", user, "from", addr, ..] => AuthEvent::Accepted { user, ip: ip(addr)?, method },
-        ["Failed", "password", "for", "invalid", "user", user, "from", addr, ..] => {
-            AuthEvent::Failed { user, ip: ip(addr)?, invalid_user: true }
-        }
-        ["Failed", "password", "for", user, "from", addr, ..] => AuthEvent::Failed { user, ip: ip(addr)?, invalid_user: false },
-        ["Invalid", "user", user, "from", addr, ..] => AuthEvent::InvalidUser { user, ip: ip(addr)? },
-        ["pam_unix(sshd:session):", "session", "opened", "for", "user", user_uid, ..] => {
+        ["Accepted", method, "for", user, "from", addr, ..] => AuthEvent::Accepted {
+            user,
+            ip: ip(addr)?,
+            method,
+        },
+        [
+            "Failed",
+            "password",
+            "for",
+            "invalid",
+            "user",
+            user,
+            "from",
+            addr,
+            ..,
+        ] => AuthEvent::Failed {
+            user,
+            ip: ip(addr)?,
+            invalid_user: true,
+        },
+        ["Failed", "password", "for", user, "from", addr, ..] => AuthEvent::Failed {
+            user,
+            ip: ip(addr)?,
+            invalid_user: false,
+        },
+        ["Invalid", "user", user, "from", addr, ..] => AuthEvent::InvalidUser {
+            user,
+            ip: ip(addr)?,
+        },
+        [
+            "pam_unix(sshd:session):",
+            "session",
+            "opened",
+            "for",
+            "user",
+            user_uid,
+            ..,
+        ] => {
             let user = user_uid.split_once('(').map_or(user_uid, |(user, _)| user);
             AuthEvent::SessionOpened { user }
         }
-        ["pam_unix(sshd:session):", "session", "closed", "for", "user", user] => AuthEvent::SessionClosed { user },
+        [
+            "pam_unix(sshd:session):",
+            "session",
+            "closed",
+            "for",
+            "user",
+            user,
+        ] => AuthEvent::SessionClosed { user },
         [user, ":", tty, ..] if tty.starts_with("TTY=") => {
-            let (_, command) = message.split_once("COMMAND=").ok_or(ParseError::MissingField("COMMAND"))?;
+            let (_, command) = message
+                .split_once("COMMAND=")
+                .ok_or(ParseError::MissingField("COMMAND"))?;
             AuthEvent::Sudo { user, command }
         }
         _ => AuthEvent::Other(message),

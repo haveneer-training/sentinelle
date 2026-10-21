@@ -18,13 +18,24 @@ fn load() -> String {
 
 fn main() {
     let text = load();
-    let report = Report { worst_line: text.lines().find(|l| l.starts_with("Failed")).unwrap_or("") };
-    assert_eq!(report.worst_line, "Failed password for root from 192.0.2.67");
+    let report = Report {
+        worst_line: text.lines().find(|l| l.starts_with("Failed")).unwrap_or(""),
+    };
+    assert_eq!(
+        report.worst_line,
+        "Failed password for root from 192.0.2.67"
+    );
 
     let owned;
     {
         let text = load();
-        owned = OwnedReport { worst_line: text.lines().find(|l| l.starts_with("Failed")).unwrap_or("").to_string() };
+        owned = OwnedReport {
+            worst_line: text
+                .lines()
+                .find(|l| l.starts_with("Failed"))
+                .unwrap_or("")
+                .to_string(),
+        };
     }
     assert_eq!(owned.worst_line, "Failed password for root from 192.0.2.67");
     println!("ex07 : OK");

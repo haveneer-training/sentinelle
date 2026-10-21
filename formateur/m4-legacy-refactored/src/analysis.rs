@@ -37,7 +37,11 @@ pub fn count_failures_by_ip(entries: &[AuthEntry]) -> Vec<(&str, usize)> {
 
 /// Adresses de plus de [`BRUTEFORCE_FAILURES`] échecs, à partir des comptes déjà faits.
 pub fn detect_bruteforce<'a>(failures: &[(&'a str, usize)]) -> Vec<&'a str> {
-    failures.iter().filter(|&&(_, count)| count > BRUTEFORCE_FAILURES).map(|&(ip, _)| ip).collect()
+    failures
+        .iter()
+        .filter(|&&(_, count)| count > BRUTEFORCE_FAILURES)
+        .map(|&(ip, _)| ip)
+        .collect()
 }
 
 /// Adresses ayant échoué sur plus de [`SPRAYING_ACCOUNTS`] comptes distincts.
@@ -46,8 +50,11 @@ pub fn detect_spraying(entries: &[AuthEntry]) -> Vec<(&str, usize)> {
     for entry in entries.iter().filter(|e| e.kind == AuthKind::Failed) {
         accounts.entry(&entry.ip).or_default().insert(&entry.user);
     }
-    let mut found: Vec<(&str, usize)> =
-        accounts.into_iter().map(|(ip, users)| (ip, users.len())).filter(|&(_, n)| n > SPRAYING_ACCOUNTS).collect();
+    let mut found: Vec<(&str, usize)> = accounts
+        .into_iter()
+        .map(|(ip, users)| (ip, users.len()))
+        .filter(|&(_, n)| n > SPRAYING_ACCOUNTS)
+        .collect();
     found.sort_by_key(|&(_, accounts)| Reverse(accounts));
     found
 }

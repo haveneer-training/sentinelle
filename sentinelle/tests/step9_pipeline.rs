@@ -17,7 +17,15 @@ fn owned(summary: Summary<&str>) -> Summary<String> {
         accounts_by_ip: summary
             .accounts_by_ip
             .into_iter()
-            .map(|(ip, accounts)| (ip, accounts.into_iter().map(String::from).collect::<HashSet<_>>()))
+            .map(|(ip, accounts)| {
+                (
+                    ip,
+                    accounts
+                        .into_iter()
+                        .map(String::from)
+                        .collect::<HashSet<_>>(),
+                )
+            })
             .collect(),
     }
 }
@@ -27,8 +35,12 @@ fn pipeline_equals_sequential() {
     for data in [common::dataset(), common::dataset_with_invalid_utf8()] {
         let expected = owned(summarize(&data.auth));
         for (workers, lines_per_block) in [(1, 1_000), (4, 500), (8, 7)] {
-            let summary = summarize_pipeline(Cursor::new(&data.auth), workers, lines_per_block).unwrap();
-            assert_eq!(summary, expected, "{workers} travailleurs, blocs de {lines_per_block} lignes");
+            let summary =
+                summarize_pipeline(Cursor::new(&data.auth), workers, lines_per_block).unwrap();
+            assert_eq!(
+                summary, expected,
+                "{workers} travailleurs, blocs de {lines_per_block} lignes"
+            );
         }
     }
 }

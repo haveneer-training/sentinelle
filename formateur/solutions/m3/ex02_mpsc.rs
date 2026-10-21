@@ -4,7 +4,10 @@ use std::sync::mpsc;
 use std::thread;
 
 const SERVERS: [(&str, &str); 3] = [
-    ("bastion-01", "Failed password for root\nFailed password for l.roux\n"),
+    (
+        "bastion-01",
+        "Failed password for root\nFailed password for l.roux\n",
+    ),
     ("srv-web-01", "Accepted password for l.roux\n"),
     ("srv-db-02", "Failed password for postgres\n"),
 ];
@@ -15,7 +18,8 @@ fn collect_alerts() -> Vec<String> {
         let tx = tx.clone();
         thread::spawn(move || {
             for line in log.lines().filter(|l| l.starts_with("Failed")) {
-                tx.send(format!("{server} : {line}")).expect("récepteur disparu");
+                tx.send(format!("{server} : {line}"))
+                    .expect("récepteur disparu");
             }
         });
     }
@@ -30,7 +34,11 @@ fn main() {
     let alerts = collect_alerts();
     assert_eq!(
         alerts,
-        ["bastion-01 : Failed password for l.roux", "bastion-01 : Failed password for root", "srv-db-02 : Failed password for postgres"]
+        [
+            "bastion-01 : Failed password for l.roux",
+            "bastion-01 : Failed password for root",
+            "srv-db-02 : Failed password for postgres"
+        ]
     );
     println!("m3/ex02 : OK");
 }

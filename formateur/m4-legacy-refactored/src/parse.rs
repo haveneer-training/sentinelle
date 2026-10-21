@@ -31,10 +31,18 @@ pub fn parse_auth_line(line: &str) -> Option<AuthEntry> {
     } else if message.starts_with("Invalid user ") {
         (AuthKind::InvalidUser, 5, 7)
     } else {
-        return Some(AuthEntry { kind: AuthKind::Other, user: String::new(), ip: String::new() });
+        return Some(AuthEntry {
+            kind: AuthKind::Other,
+            user: String::new(),
+            ip: String::new(),
+        });
     };
     let word = |i: usize| words.get(i).copied().unwrap_or_default().to_string();
-    Some(AuthEntry { kind, user: word(user_at), ip: word(ip_at) })
+    Some(AuthEntry {
+        kind,
+        user: word(user_at),
+        ip: word(ip_at),
+    })
 }
 
 /// Lit une ligne de `access.log` ; `None` si elle a moins de dix mots.
@@ -51,5 +59,8 @@ pub fn parse_web_line(line: &str) -> Option<WebEntry> {
     if words.len() < 10 {
         return None;
     }
-    Some(WebEntry { user: words[2].to_string(), bytes: words[8].to_string() })
+    Some(WebEntry {
+        user: words[2].to_string(),
+        bytes: words[8].to_string(),
+    })
 }

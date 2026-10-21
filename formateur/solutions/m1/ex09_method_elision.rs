@@ -11,12 +11,17 @@ struct Directory {
 
 impl Directory {
     fn display_name<'a>(&'a self, login: &str, fallback: &'a str) -> &'a str {
-        self.names.get(login).map(String::as_str).unwrap_or(fallback)
+        self.names
+            .get(login)
+            .map(String::as_str)
+            .unwrap_or(fallback)
     }
 }
 
 fn main() {
-    let directory = Directory { names: HashMap::from([("l.roux".to_string(), "Léa Roux".to_string())]) };
+    let directory = Directory {
+        names: HashMap::from([("l.roux".to_string(), "Léa Roux".to_string())]),
+    };
     let unknown = "inconnu";
     assert_eq!(directory.display_name("l.roux", unknown), "Léa Roux");
     assert_eq!(directory.display_name("x.y", unknown), "inconnu");

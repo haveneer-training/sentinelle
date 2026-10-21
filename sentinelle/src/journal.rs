@@ -27,7 +27,8 @@ pub fn load(path: &Path) -> std::io::Result<Vec<u8>> {
 /// Contrairement à `str::lines`, travaille sur des octets : une ligne d'UTF-8 invalide
 /// n'empêche pas de lire les suivantes.
 pub fn lines(text: &[u8]) -> impl Iterator<Item = &[u8]> {
-    text.split_inclusive(|&b| b == b'\n').map(|line| line.strip_suffix(b"\n").unwrap_or(line))
+    text.split_inclusive(|&b| b == b'\n')
+        .map(|line| line.strip_suffix(b"\n").unwrap_or(line))
 }
 
 /// Analyse chaque ligne de `text` avec `parse`.
@@ -36,14 +37,22 @@ pub fn lines(text: &[u8]) -> impl Iterator<Item = &[u8]> {
 /// l'UTF-8 valide est rejetée avec [`ParseError::InvalidUtf8`], sans interrompre la
 /// lecture.
 #[cfg_attr(not(feature = "step3"), allow(unused_variables))] // trou étape 3
-pub fn parse_lines<'a, T>(text: &'a [u8], parse: impl Fn(&'a str) -> Result<T, ParseError>) -> Journal<T> {
+pub fn parse_lines<'a, T>(
+    text: &'a [u8],
+    parse: impl Fn(&'a str) -> Result<T, ParseError>,
+) -> Journal<T> {
     // TODO-STEP:3 Parcourir `lines(text)` en numérotant les lignes, convertir chacune en
     // `&str` avec `std::str::from_utf8`, l'analyser, et ranger le résultat dans `entries`
     // ou dans `errors`.
     // SOLUTION-BEGIN
-    let mut journal = Journal { entries: Vec::new(), errors: Vec::new() };
+    let mut journal = Journal {
+        entries: Vec::new(),
+        errors: Vec::new(),
+    };
     for (index, line) in lines(text).enumerate() {
-        let parsed = std::str::from_utf8(line).map_err(|_| ParseError::InvalidUtf8).and_then(&parse);
+        let parsed = std::str::from_utf8(line)
+            .map_err(|_| ParseError::InvalidUtf8)
+            .and_then(&parse);
         match parsed {
             Ok(entry) => journal.entries.push(entry),
             Err(error) => journal.errors.push((index + 1, error)),

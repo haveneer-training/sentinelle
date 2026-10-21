@@ -17,7 +17,10 @@ fn user_part(session: &Session) -> &str {
 }
 
 fn main() {
-    let session = Session { user: "l.roux".into(), host: "srv-db-02".into() };
+    let session = Session {
+        user: "l.roux".into(),
+        host: "srv-db-02".into(),
+    };
     assert_eq!(label(&session), "l.roux@srv-db-02");
     assert_eq!(user_part(&session), "roux");
     println!("ex05 : OK");

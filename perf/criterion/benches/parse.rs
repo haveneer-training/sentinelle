@@ -15,7 +15,9 @@ fn parse(c: &mut Criterion) {
     group.bench_function("ligne", |b| b.iter(|| parse_auth_line(black_box(line))));
     group.throughput(Throughput::Bytes(data.auth.len() as u64));
     group.sample_size(20);
-    group.bench_function("auth.log", |b| b.iter(|| parse_auth(black_box(&data.auth)).entries.len()));
+    group.bench_function("auth.log", |b| {
+        b.iter(|| parse_auth(black_box(&data.auth)).entries.len())
+    });
     group.finish();
 }
 

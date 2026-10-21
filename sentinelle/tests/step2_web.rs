@@ -46,9 +46,22 @@ fn rejects_malformed_lines() {
     // chaque troncature de la ligne valide doit être refusée, sans paniquer (sauf celle
     // qui ne fait que raccourcir le dernier nombre, toujours lisible)
     for end in 1..ok.len() - 1 {
-        assert!(parse_web_line(&ok[..end]).is_err(), "tronquée : {}", &ok[..end]);
+        assert!(
+            parse_web_line(&ok[..end]).is_err(),
+            "tronquée : {}",
+            &ok[..end]
+        );
     }
-    assert_eq!(parse_web_line(&format!("{ok} 7")), Err(ParseError::BadNumber("champ en trop")));
-    assert_eq!(parse_web_line(&ok.replace("10.1.0.42", "10.1.0")), Err(ParseError::BadIp));
-    assert_eq!(parse_web_line(&ok.replace(" 200 ", " OK ")), Err(ParseError::BadNumber("status")));
+    assert_eq!(
+        parse_web_line(&format!("{ok} 7")),
+        Err(ParseError::BadNumber("champ en trop"))
+    );
+    assert_eq!(
+        parse_web_line(&ok.replace("10.1.0.42", "10.1.0")),
+        Err(ParseError::BadIp)
+    );
+    assert_eq!(
+        parse_web_line(&ok.replace(" 200 ", " OK ")),
+        Err(ParseError::BadNumber("status"))
+    );
 }

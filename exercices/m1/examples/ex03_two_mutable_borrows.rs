@@ -9,7 +9,8 @@
 use std::collections::HashMap;
 
 fn main() {
-    let mut failures: HashMap<&str, u32> = HashMap::from([("198.51.100.227", 445), ("198.51.100.228", 12)]);
+    let mut failures: HashMap<&str, u32> =
+        HashMap::from([("198.51.100.227", 445), ("198.51.100.228", 12)]);
     let main = failures.get_mut("198.51.100.227").unwrap();
     let alias = failures.get_mut("198.51.100.228").unwrap();
     *main += *alias;

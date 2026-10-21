@@ -68,7 +68,12 @@ pub fn parse_timestamp(text: &str) -> Option<Timestamp> {
     let number = |range: std::ops::Range<usize>| text[range].parse::<u32>().ok();
     let (year, month, day) = (number(0..4)?, number(5..7)?, number(8..10)?);
     let (hour, minute, second) = (number(11..13)?, number(14..16)?, number(17..19)?);
-    if !(1..=12).contains(&month) || !(1..=31).contains(&day) || hour > 23 || minute > 59 || second > 59 {
+    if !(1..=12).contains(&month)
+        || !(1..=31).contains(&day)
+        || hour > 23
+        || minute > 59
+        || second > 59
+    {
         return None;
     }
     let seconds = i64::from(hour * 3600 + minute * 60 + second);
@@ -84,6 +89,12 @@ impl fmt::Display for Iso {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let (year, month, day) = civil_from_days(self.0.div_euclid(DAY));
         let secs = self.0.rem_euclid(DAY);
-        write!(f, "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z", secs / HOUR, secs / MINUTE % 60, secs % 60)
+        write!(
+            f,
+            "{year:04}-{month:02}-{day:02}T{:02}:{:02}:{:02}Z",
+            secs / HOUR,
+            secs / MINUTE % 60,
+            secs % 60
+        )
     }
 }

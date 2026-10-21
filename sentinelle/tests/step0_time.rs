@@ -31,14 +31,28 @@ fn rejects_wrong_shapes() {
         "2026-1a-09T08:12:45Z",
         "+026-11-09T08:12:45Z",
     ] {
-        assert_eq!(parse_timestamp(text), None, "« {text} » devrait être refusé");
+        assert_eq!(
+            parse_timestamp(text),
+            None,
+            "« {text} » devrait être refusé"
+        );
     }
 }
 
 #[test]
 fn rejects_out_of_range_values() {
-    for text in ["2026-13-09T08:12:45Z", "2026-00-09T08:12:45Z", "2026-11-00T08:12:45Z", "2026-11-09T24:00:00Z", "2026-11-09T08:60:00Z"] {
-        assert_eq!(parse_timestamp(text), None, "« {text} » devrait être refusé");
+    for text in [
+        "2026-13-09T08:12:45Z",
+        "2026-00-09T08:12:45Z",
+        "2026-11-00T08:12:45Z",
+        "2026-11-09T24:00:00Z",
+        "2026-11-09T08:60:00Z",
+    ] {
+        assert_eq!(
+            parse_timestamp(text),
+            None,
+            "« {text} » devrait être refusé"
+        );
     }
 }
 

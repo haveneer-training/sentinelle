@@ -14,8 +14,18 @@ pub fn render(journals: &Journals) -> String {
 
 fn write_report(out: &mut String, journals: &Journals) -> std::fmt::Result {
     writeln!(out, "=== Sentinelle v0.1 ===")?;
-    writeln!(out, "auth.log   : {} entrees ({} ignorees)", journals.auth.len(), journals.auth_skipped)?;
-    writeln!(out, "access.log : {} entrees ({} ignorees)", journals.web.len(), journals.web_skipped)?;
+    writeln!(
+        out,
+        "auth.log   : {} entrees ({} ignorees)",
+        journals.auth.len(),
+        journals.auth_skipped
+    )?;
+    writeln!(
+        out,
+        "access.log : {} entrees ({} ignorees)",
+        journals.web.len(),
+        journals.web_skipped
+    )?;
 
     let failures = count_failures_by_ip(&journals.auth);
     writeln!(out, "\n--- Top 10 des IP en echec ---")?;

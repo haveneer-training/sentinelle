@@ -27,21 +27,38 @@ fn main() -> std::io::Result<()> {
     let path = dir.join("auth.log");
     let (text, read) = timed(|| load(&path));
     let text = text?;
-    println!("{} : {:.1} Mo lus en {read:.1?}\n", path.display(), text.len() as f64 / 1e6);
+    println!(
+        "{} : {:.1} Mo lus en {read:.1?}\n",
+        path.display(),
+        text.len() as f64 / 1e6
+    );
 
     let (reference, sequential) = timed(|| summarize(&text));
-    println!("séquentiel : {sequential:.1?} ({} lignes)\n", reference.lines);
-    println!("{:>8} {:>12} {:>12} {:>12}", "threads", "scope", "pipeline", "partagé");
+    println!(
+        "séquentiel : {sequential:.1?} ({} lignes)\n",
+        reference.lines
+    );
+    println!(
+        "{:>8} {:>12} {:>12} {:>12}",
+        "threads", "scope", "pipeline", "partagé"
+    );
 
     let max = std::thread::available_parallelism().map_or(8, |n| n.get());
     let shared_text = Arc::new(text.clone());
     let mut threads = 1;
     while threads <= max {
         let (_, scoped) = timed(|| summarize_scoped(&text, threads));
-        let (_, pipeline) = timed(|| summarize_pipeline(BufReader::new(std::fs::File::open(&path)?), threads, 10_000));
+        let (_, pipeline) = timed(|| {
+            summarize_pipeline(BufReader::new(std::fs::File::open(&path)?), threads, 10_000)
+        });
         let (_, shared) = timed(|| summarize_shared(Arc::clone(&shared_text), threads));
         let ratio = |d: Duration| format!("×{:.2}", sequential.as_secs_f64() / d.as_secs_f64());
-        println!("{threads:>8} {:>12} {:>12} {:>12}", ratio(scoped), ratio(pipeline), ratio(shared));
+        println!(
+            "{threads:>8} {:>12} {:>12} {:>12}",
+            ratio(scoped),
+            ratio(pipeline),
+            ratio(shared)
+        );
         threads *= 2;
     }
     Ok(())

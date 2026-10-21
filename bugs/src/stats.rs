@@ -20,13 +20,18 @@ impl Shared {
         let mut failures = self.failures.lock().unwrap();
         *failures.entry(ip.to_string()).or_insert(0) += 1;
         let mut accounts = self.accounts.lock().unwrap();
-        accounts.entry(ip.to_string()).or_default().insert(user.to_string());
+        accounts
+            .entry(ip.to_string())
+            .or_default()
+            .insert(user.to_string());
     }
 
     /// Un succès blanchit l'adresse si elle n'a visé que ce compte.
     fn accepted(&self, ip: &str, user: &str) {
         let accounts = self.accounts.lock().unwrap();
-        let only_this_user = accounts.get(ip).is_none_or(|users| users.len() == 1 && users.contains(user));
+        let only_this_user = accounts
+            .get(ip)
+            .is_none_or(|users| users.len() == 1 && users.contains(user));
         if only_this_user {
             self.failures.lock().unwrap().remove(ip);
         }
@@ -57,6 +62,9 @@ pub fn run(dir: &Path, threads: usize) {
     let mut top: Vec<(&String, &usize)> = failures.iter().collect();
     top.sort_by(|a, b| b.1.cmp(a.1).then(a.0.cmp(b.0)));
     for (ip, count) in top.iter().take(5) {
-        println!("{ip:>18} {count:>6} échecs, {} comptes", accounts.get(*ip).map_or(0, HashSet::len));
+        println!(
+            "{ip:>18} {count:>6} échecs, {} comptes",
+            accounts.get(*ip).map_or(0, HashSet::len)
+        );
     }
 }

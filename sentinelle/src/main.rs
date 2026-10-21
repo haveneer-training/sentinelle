@@ -37,8 +37,16 @@ fn main() -> ExitCode {
     let parsed = started.elapsed();
 
     println!("=== Sentinelle ===");
-    println!("auth.log   : {} entrées ({} rejetées)", auth.entries.len(), auth.errors.len());
-    println!("access.log : {} entrées ({} rejetées)", web.entries.len(), web.errors.len());
+    println!(
+        "auth.log   : {} entrées ({} rejetées)",
+        auth.entries.len(),
+        auth.errors.len()
+    );
+    println!(
+        "access.log : {} entrées ({} rejetées)",
+        web.entries.len(),
+        web.errors.len()
+    );
 
     println!("\n--- Adresses en échec (top 10) ---");
     for (ip, failures) in top_n(&failures_by_ip(&auth.entries), 10) {
@@ -54,12 +62,19 @@ fn main() -> ExitCode {
     for alert in analyze(&auth.entries, &web.entries, &config) {
         println!("{alert}");
     }
-    eprintln!("\nlecture et analyse syntaxique : {parsed:.1?}, total : {:.1?}", started.elapsed());
+    eprintln!(
+        "\nlecture et analyse syntaxique : {parsed:.1?}, total : {:.1?}",
+        started.elapsed()
+    );
 
     if let Some(threads) = threads {
         let started = Instant::now();
         let summary = summarize_scoped(&auth_text, threads);
-        eprintln!("résumé sur {threads} threads : {} lignes en {:.1?}", summary.lines, started.elapsed());
+        eprintln!(
+            "résumé sur {threads} threads : {} lignes en {:.1?}",
+            summary.lines,
+            started.elapsed()
+        );
     }
     ExitCode::SUCCESS
 }
