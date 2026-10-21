@@ -1,0 +1,37 @@
+[package]
+name = "sentinelle"
+description = "Analyse de journaux d'authentification et d'accès web — fil rouge de la formation Rust intermédiaire"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+# Une « feature » par étape, chaînée à la précédente : activer `step3` active step0 à
+# step3. Les tests de chaque étape sont conditionnés à la sienne, si bien que
+# `cargo test` ne montre que ce qui est déjà au programme du stagiaire.
+# `cargo xtask goto <n>` ne fait rien d'autre que réécrire la ligne `default`.
+#
+# `step11` est la **sentinelle** : l'étape qui suit la dernière implémentée (`LAST_STEP`
+# dans `xtask/src/main.rs`). Aucun code n'en dépend ; elle sert à écrire
+# `not(feature = "step11")` sur les avertissements collatéraux des trous de la dernière
+# étape : vraie dans un dossier de travail, fausse ici.
+[features]
+default = ["step11"]
+step0 = []
+step1 = ["step0"]
+step2 = ["step1"]
+step3 = ["step2"]
+step4 = ["step3"]
+step5 = ["step4"]
+step6 = ["step5"]
+step7 = ["step6"]
+step8 = ["step7"]
+step9 = ["step8"]
+step10 = ["step9"]
+step11 = ["step10"]
+
+[dependencies]
+
+[dev-dependencies]
+sentinelle-gen = { path = "../generator" }

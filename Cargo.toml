@@ -1,0 +1,22 @@
+[workspace]
+resolver = "3"
+members = ["generator", "sentinelle", "legacy", "xtask", "perf", "exercices/m1", "exercices/m2", "exercices/m3", "bugs"]
+# `cargo build` / `cargo test` sans `-p` : le fil rouge et le générateur.
+default-members = ["sentinelle", "generator"]
+# Le dossier de travail engendré par `cargo xtask start` est un projet à part entière.
+exclude = ["travail"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+license = "CC-BY-NC-SA-4.0"
+authors = ["Pascal Havé <contact@haveneer.com>"]
+
+# Les tests engendrent des journaux à chaque lancement : le générateur reste rapide
+# même dans un profil de mise au point.
+[profile.dev.package.sentinelle-gen]
+opt-level = 3
+
+[profile.release]
+debug = true

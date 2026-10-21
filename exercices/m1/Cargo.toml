@@ -1,0 +1,15 @@
+[package]
+name = "sentinelle-m1"
+description = "Module 1 : erreurs classiques du vérificateur d'emprunts, à corriger"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+# Chaque exercice est un exemple autonome qui, tel que livré, **ne compile pas**.
+#   cargo run -p sentinelle-m1 --example ex01_mutable_aliasing
+# Ce paquet n'est pas dans les membres par défaut du workspace : `cargo test` à la
+# racine ne le compile pas.
+[dependencies]

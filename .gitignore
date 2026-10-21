@@ -1,0 +1,4 @@
+target/
+/data/
+/travail/
+*.local.md

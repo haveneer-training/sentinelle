@@ -1,0 +1,28 @@
+[package]
+name = "sentinelle-perf"
+description = "Module 5 : mesures de performance de Sentinelle et de la v0.1"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+# Aucune dépendance externe : le harnais de mesure est dans `src/lib.rs`, et
+# `cargo bench -p sentinelle-perf` fonctionne hors ligne. La version criterion est dans
+# `perf/criterion/` (projet séparé, qui demande ses dépendances).
+[dependencies]
+sentinelle = { path = "../sentinelle" }
+sentinelle-gen = { path = "../generator" }
+
+[[bench]]
+name = "parse"
+harness = false
+
+[[bench]]
+name = "detect"
+harness = false
+
+[[bench]]
+name = "summary"
+harness = false

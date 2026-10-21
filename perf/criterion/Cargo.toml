@@ -1,0 +1,27 @@
+# Les mêmes mesures avec criterion, l'outil de référence de l'écosystème.
+#
+# Projet séparé du workspace : ses dépendances (criterion et son arbre) ne doivent pas
+# être nécessaires pour construire le reste. Sur un réseau isolé, préparer l'archive
+# hors ligne sur une machine connectée (voir docs/modules/module-5.md, « Hors ligne »).
+#
+#   cargo bench --manifest-path perf/criterion/Cargo.toml
+[package]
+name = "sentinelle-criterion"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+license = "CC-BY-NC-SA-4.0"
+publish = false
+
+[dependencies]
+sentinelle = { path = "../../sentinelle" }
+sentinelle-gen = { path = "../../generator" }
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support", "html_reports"] }
+
+[[bench]]
+name = "parse"
+harness = false
+
+[workspace]

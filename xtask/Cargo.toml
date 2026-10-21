@@ -1,0 +1,11 @@
+[package]
+name = "xtask"
+description = "Outillage du fil rouge : génération du dossier de travail et pilotage des étapes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]

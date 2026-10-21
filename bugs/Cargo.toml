@@ -1,0 +1,12 @@
+[package]
+name = "sentinelle-turbo"
+description = "Module 6 : l'outil « turbo » d'un collègue, qui plante. À déboguer."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+# Hors des membres par défaut : certaines commandes ne se terminent jamais.
+[dependencies]

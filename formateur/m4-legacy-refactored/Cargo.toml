@@ -1,0 +1,23 @@
+# Module 4 — corrigé de la refactorisation de `legacy/` (référence formateur).
+#
+# Paquet autonome, hors du workspace du dépôt (qui ne doit pas dépendre de `formateur/`,
+# absent des dossiers de travail) :
+#   cargo test --manifest-path formateur/m4-legacy-refactored/Cargo.toml
+[package]
+name = "sentinelle-legacy-refactored"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.90"
+license = "CC-BY-NC-SA-4.0"
+publish = false
+
+[[bin]]
+name = "sentinelle-v0"
+path = "src/main.rs"
+
+[dependencies]
+
+[dev-dependencies]
+sentinelle-gen = { path = "../../generator" }
+
+[workspace]
