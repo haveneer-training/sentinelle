@@ -109,4 +109,5 @@ Durées, notions et références aux diapositives : `ESTIMATION.local.md` (non v
 - [ ] répéter une session de débogage complète sur un poste Linux de la salle (non faite :
       le bac à sable de la machine de préparation interdit l'attachement du débogueur)
 - [ ] préparer l'archive hors ligne de `perf/criterion/` une fois l'environnement connu
-- [ ] élaguer `index2.html` (voir `ESTIMATION.local.md`, « Matériel disponible »)
+- [x] deck de la formation : `index3.html` (édition DGSE en parties ; voir `ESTIMATION.local.md`,
+      « Matériel disponible »)

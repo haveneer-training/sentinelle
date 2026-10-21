@@ -42,4 +42,8 @@ l'exécute. La documentation est du code testé.
 
 ## Diapositives
 
-« array, slice, Box » et « String et str » (conteneurs basiques) ; « Tout est expression ».
+« Les conteneurs basiques 2/4 : array, slice, Box » et « Les conteneurs basiques 3/4 : les
+chaines de caractères String et str » (Les conteneurs de données et leurs usages).
+
+Rappel hors du deck de la formation, si besoin : « Tout est expression » (Concepts clés,
+`index.html`).

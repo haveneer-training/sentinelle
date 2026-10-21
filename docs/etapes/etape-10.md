@@ -44,5 +44,9 @@ limite (loi d'Amdahl : la lecture, la fusion) ?
 
 ## Diapositives
 
-« Et avec spawn ? Arc, Send et Sync », « Ce que coûte la synchronisation », « Autres
-mécanismes : les types atomiques », « RwLock : plusieurs lecteurs ou un seul écrivain ».
+« Et avec spawn ? Arc, Send et Sync », « Ce que coûte la synchronisation », « RwLock :
+plusieurs lecteurs ou un seul écrivain ».
+
+Les atomiques ne sont pas au programme du cours : pour ce bonus, la documentation de
+[`std::sync::atomic`](https://doc.rust-lang.org/std/sync/atomic/) suffit (`AtomicUsize::fetch_add`,
+`AtomicBool`, `Ordering`).

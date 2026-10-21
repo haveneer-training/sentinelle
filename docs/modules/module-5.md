@@ -108,5 +108,5 @@ cargo bench --offline
 Outils pour les tests et l'analyse de performance : « Mesurer avant d'optimiser »,
 « Options du compilateur et profils », « Criterion : comparer des variantes », « Le piège :
 mesurer le compilateur, pas le code », « flamegraph », « samply », « Profiler la mémoire ».
-Bonnes pratiques : « Les benchmarks : mesurer avant d'optimiser ». Conteneurs : « Choisir
-sa fonction de hachage ». Représentation des types : « Coût des méthodes d'allocation ».
+Conteneurs : « Choisir sa fonction de hachage ». Représentation des types : « Coût des
+méthodes d'allocation ».

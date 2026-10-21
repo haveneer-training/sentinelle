@@ -44,5 +44,8 @@ clé `table` → `clients`). Quelle durée de vie pour la sortie, et pourquoi pa
 
 ## Diapositives
 
-« Les chaînes de caractères » (Représentation des types) ; « Closures : une fonction
-contextualisée » (Esprit fonctionnel).
+« Les conteneurs basiques 3/4 : les chaines de caractères String et str » (Les conteneurs de
+données et leurs usages).
+
+Rappel hors du deck de la formation, si besoin : « Closures : une fonction contextualisée »
+(Esprit fonctionnel, `index.html`).
