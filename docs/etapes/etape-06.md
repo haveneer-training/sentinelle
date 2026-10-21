@@ -41,4 +41,5 @@ Filtrez ce qui est vraiment suspect (hors heures ouvrées, adresse non privée :
 
 ## Diapositives
 
-« Filtrer, partitionner, regrouper » (conteneurs) ; « Itérateurs & chaînage fonctionnel ».
+« Itérateurs & chaînage fonctionnel : un premier exemple », « Adaptateurs 1/2 : transformer »
+(`filter_map`), « Consommateurs 2/2 : collect » (Les itérateurs).
