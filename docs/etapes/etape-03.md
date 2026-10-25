@@ -38,5 +38,5 @@ Qu'a changé l'édition 2024 dans la capture des durées de vie par `impl Trait`
 
 ## Diapositives
 
-« Les annotations explicites », « Nuance entre `+'a` et `+ use<'a>` » (Lifetime et
-borrowing avancé).
+« Des octets au texte : l'UTF-8 aux frontières » (Les chaînes de caractères) ; « Les
+annotations explicites », « Nuance entre `+'a` et `+ use<'a>` » (Lifetime et borrowing avancé).

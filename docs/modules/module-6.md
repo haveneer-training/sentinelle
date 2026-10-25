@@ -101,4 +101,5 @@ Déboguer du code Rust : « Avant le débogueur : dbg!, Debug et assertions », 
 panic! », « Compiler pour déboguer », « rust-gdb / rust-lldb », « Inspecter des valeurs
 Rust avec rust-lldb », « Déboguer un programme multi-thread : l'interblocage », « Bugs de
 concurrence typiques en Rust ». Multi-threading : « mpsc::channel : le cycle de vie d'un
-channel », « « Sans peur » ne veut pas dire « sans deadlock » ».
+channel », « « Sans peur » ne veut pas dire « sans deadlock » ». Chaînes de caractères
+(ticket 3) : « Des octets au texte : l'UTF-8 aux frontières ».

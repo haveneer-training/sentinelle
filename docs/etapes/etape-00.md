@@ -42,8 +42,9 @@ l'exécute. La documentation est du code testé.
 
 ## Diapositives
 
-« Les conteneurs basiques 2/4 : array, slice, Box » et « Les conteneurs basiques 3/4 : les
-chaines de caractères String et str » (Les conteneurs de données et leurs usages).
+« Les conteneurs basiques 2/4 : array, slice, Box » (Les conteneurs de données et leurs usages) ;
+« String et str : le couple de base », « Des octets au texte : l'UTF-8 aux frontières » (Les
+chaînes de caractères).
 
 Rappel hors du deck de la formation, si besoin : « Tout est expression » (Concepts clés,
 `index.html`).

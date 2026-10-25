@@ -51,8 +51,8 @@ mesurerez le gain au module 5.
 
 ## Diapositives
 
-« Les cas implicitement gérés par le compilateur : règles d'élision » (Lifetime et borrowing
-avancé).
+« Découper du texte sans copier » (Les chaînes de caractères) ; « Les cas implicitement gérés
+par le compilateur : règles d'élision » (Lifetime et borrowing avancé).
 
 Rappels hors du deck de la formation, si besoin : « Pattern matching & cie (suite) »,
 « Nommer un lifetime » (Concepts clés, `index.html`).

@@ -44,8 +44,8 @@ clé `table` → `clients`). Quelle durée de vie pour la sortie, et pourquoi pa
 
 ## Diapositives
 
-« Les conteneurs basiques 3/4 : les chaines de caractères String et str » (Les conteneurs de
-données et leurs usages).
+« Découper du texte sans copier » ; pour l'extension, « LES chaînes de caractères » (`Cow`)
+(Les chaînes de caractères).
 
 Rappel hors du deck de la formation, si besoin : « Closures : une fonction contextualisée »
 (Esprit fonctionnel, `index.html`).
