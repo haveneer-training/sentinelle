@@ -12,6 +12,18 @@ Généré par `sentinelle-gen` à partir de la graine. Toutes les valeurs (adres
 victime, horaires) en dépendent. `--reveal` écrit la vérité terrain dans
 `GROUND_TRUTH.md`. Distribuer aux stagiaires un jeu généré avec une graine non publiée.
 
+Le jeu « officiel » (≈ 830 Mo, celui de l'étape 8) se génère ainsi, avec une graine
+choisie pour la session (jamais 42, celle du jeu par défaut) :
+
+```shell
+cargo run --release -p sentinelle-gen -- --out data-officiel --seed <graine-secrète> \
+    --users 20000 --noise 50 --invalid-utf8 --reveal
+```
+
+Ne distribuer que `auth.log` et `access.log` : `GROUND_TRUTH.md` (la solution) reste chez
+le formateur. `--invalid-utf8` est couvert par le fil rouge dès l'étape 3 ; la v0.1, elle,
+panique dessus (D8) et de toute façon ne passe pas à cette taille.
+
 | Jour | Étape | Ce qui la révèle |
 |---|---|---|
 | mar. 14h–16h | Password spraying depuis une IP `203.0.113.x` : 1 essai par compte, ~70 % des comptes + 15 comptes inexistants, un essai toutes les 25–70 s | comptes distincts par IP (`HashSet`) |

@@ -70,5 +70,12 @@ Exemple :
 | `srv-files-01` | 10.0.4.31 | partage de fichiers |
 | `srv-build-01` | 10.0.5.41 | intégration continue |
 
-Les postes de travail sont dans `10.1.0.0/16`. Les adresses Internet utilisées sont
-des plages réservées à la documentation ou partagées : aucune n'est attribuable.
+Les postes de travail sont dans `10.1.0.0/16`.
+
+Les adresses « Internet » (tout ce qui est hors de `10.0.0.0/8`) sont fictives. Elles
+viennent de plages qu'aucun organisme n'attribue à qui que ce soit : les plages réservées
+à la documentation (RFC 5737 : `192.0.2.0/24`, `198.51.100.0/24`, `203.0.113.0/24`) et
+la plage partagée des opérateurs (RFC 6598 : `100.64.0.0/10`, utilisée pour le NAT chez les
+fournisseurs d'accès). Aucune ne désigne donc une personne ou une entreprise réelle : un
+`whois` ou une géolocalisation n'apprendrait rien, tout ce qu'il y a à savoir sur ces
+adresses est dans les journaux.
