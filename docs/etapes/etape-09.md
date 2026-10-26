@@ -35,6 +35,21 @@ cargo test --test step9_pipeline
 
 Le test `empty_input_terminates` échoue par blocage si un canal reste ouvert.
 
+## Pour aller plus loin
+
+Le [One Billion Row Challenge](https://github.com/gunnarmorling/1brc) (Gunnar Morling,
+2024, en Java à l'origine) pose le même problème en plus gros : un milliard de lignes
+`station;température` (environ 13 Go), dont il faut le minimum, la moyenne et le maximum
+par station. Jon Gjengset en a fait une implémentation Rust en direct :
+[impl Rust: One Billion Row Challenge](https://www.youtube.com/watch?v=tCY7p6dVAGE).
+
+On y retrouve les idées des étapes 8 et 9 : des morceaux qui finissent sur une fin de
+ligne, un résumé par thread puis une fusion, des octets plutôt que du texte validé. Les
+solutions les plus rapides du défi vont plus loin : `mmap` (le fichier est projeté en
+mémoire, ce qui permet d'emprunter les clés comme à l'étape 8 sans tout lire d'avance),
+recherche des séparateurs en SIMD, table de hachage maison. Ces techniques (`unsafe`,
+SIMD) sortent du cadre de la formation.
+
 ## Diapositives
 
 « Le concept de channel », « mpsc::channel : le cycle de vie d'un channel »,
