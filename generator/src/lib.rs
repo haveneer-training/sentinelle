@@ -7,12 +7,14 @@
 
 pub mod clock;
 pub mod events;
+pub mod injection;
 pub mod rng;
 pub mod scenario;
 pub mod world;
 
 use clock::DAY;
 use events::{Batch, Line};
+use injection::Injection;
 use rng::Rng;
 use scenario::Scenario;
 use std::io::{self, Write};
@@ -25,6 +27,8 @@ pub struct Options {
     pub noise: f64,
     pub malformed: f64,
     pub invalid_utf8: bool,
+    /// Bonus : noms de compte piégés (saut de ligne, homoglyphes, caractères invisibles).
+    pub injection: bool,
 }
 
 impl Default for Options {
@@ -36,6 +40,7 @@ impl Default for Options {
             noise: 1.0,
             malformed: 0.0005,
             invalid_utf8: false,
+            injection: false,
         }
     }
 }
@@ -44,6 +49,7 @@ impl Default for Options {
 pub struct Generated {
     pub world: World,
     pub scenario: Scenario,
+    pub injection: Option<Injection>,
     pub auth: Counts,
     pub access: Counts,
 }
@@ -64,7 +70,12 @@ pub fn generate(opts: &Options, auth: impl Write, access: impl Write) -> io::Res
     let mut rng = Rng::new(opts.seed);
     let world = World::new(&mut rng.fork(), opts.users, opts.days);
     let (scenario, attack) = scenario::play(&world, &mut rng.fork());
-    let excluded = [scenario.spray_ip, scenario.brute_ip];
+    // flux à part, dérivé de la graine : sans l'option, les journaux ne changent pas
+    let injection = opts
+        .injection
+        .then(|| injection::play(&world, &mut Rng::new(opts.seed ^ 0x1A7E_C7ED_0BAD_F00D)));
+    let mut excluded = vec![scenario.spray_ip, scenario.brute_ip];
+    excluded.extend(injection.as_ref().map(|(i, _)| i.ip));
 
     // répartit les lignes du scénario par jour
     let mut attack_days: Vec<Batch> = (0..opts.days).map(|_| Batch::default()).collect();
@@ -75,6 +86,12 @@ pub fn generate(opts: &Options, auth: impl Write, access: impl Write) -> io::Res
     for line in attack.access {
         attack_days[day_of(line.ts)].access.push(line);
     }
+    let injection = injection.map(|(injection, lines)| {
+        for line in lines.auth {
+            attack_days[day_of(line.ts)].auth.push(line);
+        }
+        injection
+    });
 
     let mut auth = Sink::new(auth, rng.fork(), opts);
     let mut access = Sink::new(access, rng.fork(), opts);
@@ -100,6 +117,7 @@ pub fn generate(opts: &Options, auth: impl Write, access: impl Write) -> io::Res
     Ok(Generated {
         world,
         scenario,
+        injection,
         auth: auth.counts,
         access: access.counts,
     })
@@ -157,7 +175,8 @@ impl<W: Write> Sink<W> {
     fn write(&mut self, mut lines: Vec<Line>) -> io::Result<()> {
         lines.sort_by_key(|l| l.ts);
         for line in lines {
-            self.counts.lines += 1;
+            // un saut de ligne dans un champ (option --injection) donne plusieurs lignes
+            self.counts.lines += 1 + line.text.matches('\n').count() as u64;
             let mut bytes = line.text.into_bytes();
             if !line.protected && self.rng.chance(self.malformed) {
                 self.counts.corrupted += 1;

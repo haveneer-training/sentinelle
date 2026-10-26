@@ -86,6 +86,9 @@ on refactorise et documente `legacy/` (4), on mesure et optimise la v0.1 et le f
 terminé (5), on débogue `sentinelle-turbo` (6). Le fil rouge doit donc être complet à la
 fin du module 3 ; sinon, `cargo xtask goto 10 && cargo xtask solve 10` le termine.
 
+Hors étapes, un bonus du module 1 : [des noms de compte piégés](docs/bonus/injection.md)
+(`sentinelle-gen --injection`), quand Sentinelle sait analyser `auth.log`.
+
 ## Autour du fil rouge
 
 Chaque module a sa fiche dans [`docs/modules/`](docs/modules/) : ce qui se fait en cours,

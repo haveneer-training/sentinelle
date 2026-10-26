@@ -17,6 +17,7 @@ Usage : sentinelle-gen [OPTIONS]
   --noise F         intensité du bruit de fond d'Internet     (défaut : 1.0)
   --malformed P     probabilité qu'une ligne soit corrompue   (défaut : 0.0005)
   --invalid-utf8    les lignes corrompues peuvent contenir de l'UTF-8 invalide
+  --injection       bonus : noms de compte piégés (docs/bonus/injection.md)
   --reveal          écrit aussi GROUND_TRUTH.md (la solution : à lire après l'enquête)
 
 Ordres de grandeur sur 7 jours : 150 salariés ≈ 9 Mo ; --users 2000 --noise 10 ≈ 100 Mo.";
@@ -46,6 +47,7 @@ fn parse_args() -> Result<Args, String> {
             "--noise" => opts.noise = value()?.parse().map_err(|e| bad(&e))?,
             "--malformed" => opts.malformed = value()?.parse().map_err(|e| bad(&e))?,
             "--invalid-utf8" => opts.invalid_utf8 = true,
+            "--injection" => opts.injection = true,
             "--reveal" => parsed.reveal = true,
             "-h" | "--help" => return Err(USAGE.to_string()),
             _ => return Err(format!("option inconnue : {arg}\n\n{USAGE}")),
@@ -79,6 +81,9 @@ fn run(args: &Args) -> std::io::Result<()> {
             generated.access.corrupted,
             generated.access.lines
         ));
+        if let Some(injection) = &generated.injection {
+            report.push_str(&injection.report());
+        }
         fs::write(out.join("GROUND_TRUTH.md"), report)?;
     }
     eprintln!(

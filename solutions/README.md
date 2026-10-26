@@ -14,6 +14,7 @@ solutions pour engendrer `travail/`. Ce dossier contient tout le reste.
 | `m4-legacy-refactored/` | la v0.1 refactorisée, sortie identique ; correction de D3 derrière `--features fix-d3` (paquet autonome : `cargo test --manifest-path solutions/m4-legacy-refactored/Cargo.toml`) |
 | `m5/` | mesures de référence, `parse_auth_event` sans allocation, hachage FNV |
 | `BUGS.md` | causes et corrections des tickets du module 6 |
+| `bonus-injection/` | bonus du module 1 (`--injection`) : enquête, détections des noms suspects et des connexions fantômes, correction à la source |
 | `m6-turbo-fixed/` | `bugs/` corrigé, un test par ticket ; `scripts/check-bugs.sh` vérifie en plus que `bugs/` présente toujours chaque symptôme |
 
 ## Les défauts de la v0.1 (`legacy/src/main.rs`)

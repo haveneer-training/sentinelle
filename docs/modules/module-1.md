@@ -7,6 +7,7 @@
 | TP (4 h) | analyse de code réel : lecture critique de la v0.1 | ci-dessous, 45 min |
 | | le fil rouge, étapes 0 à 3 | `docs/etapes/`, 2 h à 2 h 40 |
 | | bugs de références dans un projet existant | `exercices/m1`, exercices 7 à 9 |
+| | *bonus* : des noms de compte piégés (injection, Unicode) | [`docs/bonus/injection.md`](../bonus/injection.md), 45 à 75 min |
 
 ## Lecture critique de `legacy/src/main.rs` (45 min)
 
