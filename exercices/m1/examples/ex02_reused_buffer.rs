@@ -5,6 +5,8 @@
 //! voudrait garder les noms d'utilisateur trouvés. Expliquez le conflit, puis proposez
 //! **deux** corrections : l'une qui copie les noms, l'autre qui n'en copie aucun (en
 //! changeant la façon de lire).
+//!
+//! Indice : <https://doc.rust-lang.org/std/str/index.html>
 
 use std::io::BufRead;
 
