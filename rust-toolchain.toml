@@ -3,5 +3,6 @@
 # besoin avéré, en même temps que `rust-version`.
 [toolchain]
 channel = "1.90.0"
-components = ["rustfmt", "clippy"]
+# `rust-analyzer` : l'extension VS Code cherche le serveur dans la toolchain épinglée
+components = ["rustfmt", "clippy", "rust-analyzer"]
 profile = "minimal"
