@@ -97,9 +97,10 @@ Durées, notions et références aux diapositives : `ESTIMATION.local.md` (non v
 | Fichier | Contenu |
 |---|---|
 | `solutions/m1`, `m2`, `m3` | corrigés des exercices courts (`cargo xtask verify`) |
-| `m4-legacy-refactored/` | la v0.1 refactorisée, sortie identique (paquet autonome : `cargo test --manifest-path formateur/m4-legacy-refactored/Cargo.toml`) |
+| `m4-legacy-refactored/` | la v0.1 refactorisée, sortie identique (paquet autonome : `cargo test --manifest-path formateur/m4-legacy-refactored/Cargo.toml`) ; étape 7 (correction de D3) derrière `--features fix-d3`, avec sa propre référence relue par `tests/fix_d3.rs` ; erreurs de chargement (D8) testées dans `tests/errors.rs` |
 | `solutions/m5/` | mesures de référence, `parse_auth_event` sans allocation, hachage FNV |
 | `BUGS.md` | causes et corrections des tickets du module 6 |
+| `m6-turbo-fixed/` | `bugs/` corrigé, un test par ticket (paquet autonome) ; `scripts/check-bugs.sh` vérifie en plus que `bugs/` présente toujours chaque symptôme |
 
 ## Prérequis techniques à faire valider
 
@@ -119,7 +120,7 @@ Durées, notions et références aux diapositives : `ESTIMATION.local.md` (non v
 - [x] exercices courts `m1` à `m3` et leurs corrigés
 - [x] module 4 : test de caractérisation de `legacy/`, consignes, corrigé
 - [x] module 5 : `perf/` (sans dépendance), `perf/criterion/`, mesures de référence
-- [x] module 6 : `bugs/`, tickets, fiche formateur
+- [x] module 6 : `bugs/`, tickets, fiche formateur, corrigé testé (`scripts/check-bugs.sh`)
 - [ ] répéter une session de débogage complète sur un poste Linux de la salle (non faite :
       le bac à sable de la machine de préparation interdit l'attachement du débogueur)
 - [ ] préparer l'archive hors ligne de `perf/criterion/` une fois l'environnement connu

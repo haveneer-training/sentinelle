@@ -64,3 +64,72 @@ pub fn parse_web_line(line: &str) -> Option<WebEntry> {
         bytes: words[8].to_string(),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const PREFIX: &str = "2026-11-09T09:41:12Z bastion-01 sshd[7]:";
+
+    #[test]
+    fn invalid_user_line() {
+        let entry = parse_auth_line(&format!(
+            "{PREFIX} Invalid user admin from 192.0.2.7 port 22"
+        ))
+        .unwrap();
+        assert_eq!(
+            (entry.kind, entry.user.as_str(), entry.ip.as_str()),
+            (AuthKind::InvalidUser, "admin", "192.0.2.7")
+        );
+    }
+
+    #[test]
+    fn failed_invalid_user_line() {
+        let line =
+            format!("{PREFIX} Failed password for invalid user admin from 192.0.2.7 port 22 ssh2");
+        let entry = parse_auth_line(&line).unwrap();
+        assert_eq!(
+            (entry.kind, entry.user.as_str(), entry.ip.as_str()),
+            (AuthKind::Failed, "admin", "192.0.2.7")
+        );
+    }
+
+    #[test]
+    fn other_line_has_no_user() {
+        let entry =
+            parse_auth_line(&format!("{PREFIX} Connection closed by 192.0.2.7 port 22")).unwrap();
+        assert_eq!(
+            (entry.kind, entry.user.as_str(), entry.ip.as_str()),
+            (AuthKind::Other, "", "")
+        );
+    }
+
+    /// **Défaut conservé (D7)**, caractérisé : sans le compte, les mots glissent d'un cran.
+    /// Ce test changera avec la correction, en connaissance de cause.
+    #[test]
+    fn line_missing_a_field_is_misread() {
+        let entry = parse_auth_line(&format!(
+            "{PREFIX} Failed password for from 192.0.2.7 port 22 ssh2"
+        ))
+        .unwrap();
+        assert_eq!(
+            (entry.kind, entry.user.as_str(), entry.ip.as_str()),
+            (AuthKind::Failed, "from", "port")
+        );
+    }
+
+    #[test]
+    fn short_web_line_is_skipped() {
+        assert_eq!(
+            parse_web_line("10.1.0.42 - v.michel [2026-11-09T09:43:02Z]"),
+            None
+        );
+    }
+
+    #[test]
+    fn web_size_dash_is_kept_as_is() {
+        let line = r#"10.1.0.42 - - [2026-11-09T09:43:02Z] "GET / HTTP/1.1" 304 - 12"#;
+        let entry = parse_web_line(line).unwrap();
+        assert_eq!((entry.user.as_str(), entry.bytes.as_str()), ("-", "-"));
+    }
+}

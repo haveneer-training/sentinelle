@@ -16,6 +16,8 @@ env:
 # c'est le point de départ du TP de refactorisation (module 4). exercices/m1 ne compile
 # pas, par construction ; m2 et m3 sont des todo!(). Tous sont vérifiés autrement :
 # test de caractérisation pour legacy/, `cargo xtask verify` pour les exercices.
+# bugs/ (module 6) plante ou se bloque par construction : scripts/check-bugs.sh vérifie
+# que chaque symptôme est toujours là, et que le corrigé formateur les fait disparaître.
 
 jobs:
   check:
@@ -48,7 +50,24 @@ jobs:
         run: |
           cargo fmt --check
           cargo clippy --all-targets -- -D warnings
+          cargo clippy --all-targets --all-features -- -D warnings
           cargo test
+          cargo test --features fix-d3
+
+  bugs:
+    name: module 6 (symptômes de bugs/, corrigé formateur/m6-turbo-fixed)
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain épinglée (rust-toolchain.toml)
+        run: rustup toolchain install "$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)" --profile minimal --component rustfmt,clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            .
+            formateur/m6-turbo-fixed
+      - name: scripts/check-bugs.sh
+        run: scripts/check-bugs.sh
 
   exercises:
     name: exercices courts (xtask verify)

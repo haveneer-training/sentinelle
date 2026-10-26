@@ -1,0 +1,28 @@
+# Module 6 — corrigé des tickets de `bugs/` (sentinelle-turbo), référence formateur.
+#
+# Paquet autonome, hors du workspace du dépôt (qui ne doit pas dépendre de `formateur/`,
+# absent des dossiers de travail) :
+#   cargo test --manifest-path formateur/m6-turbo-fixed/Cargo.toml
+# Les symptômes de la version boguée sont vérifiés par `scripts/check-bugs.sh`.
+[package]
+name = "sentinelle-turbo-fixed"
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.90"
+license = "CC-BY-NC-SA-4.0"
+publish = false
+
+[[bin]]
+name = "sentinelle-turbo"
+path = "src/main.rs"
+
+[dependencies]
+
+[dev-dependencies]
+sentinelle-gen = { path = "../../generator" }
+
+# Les tests engendrent des journaux de taille réelle : le générateur reste rapide.
+[profile.dev.package.sentinelle-gen]
+opt-level = 3
+
+[workspace]

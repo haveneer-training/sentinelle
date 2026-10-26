@@ -9,10 +9,23 @@
 //! UPDATE_GOLDEN=1 cargo test -p sentinelle-legacy
 //! git diff legacy/tests/golden/expected.txt
 //! ```
+//!
+//! Ici (corrigé formateur), la feature `fix-d3` compare à une seconde référence :
+//!
+//! ```shell
+//! UPDATE_GOLDEN=1 cargo test --features fix-d3 --test golden
+//! ```
 
 use sentinelle_gen::Dataset;
 use std::path::PathBuf;
 use std::process::Command;
+
+/// Sans correction, la référence est celle de la v0.1 elle-même.
+#[cfg(not(feature = "fix-d3"))]
+const GOLDEN: &str = "../../legacy/tests/golden/expected.txt";
+/// Après la correction de D3 (étape 7), une référence régénérée et relue.
+#[cfg(feature = "fix-d3")]
+const GOLDEN: &str = "tests/golden/expected-fix-d3.txt";
 
 #[test]
 fn output_is_unchanged() {
@@ -34,8 +47,7 @@ fn output_is_unchanged() {
     );
     let actual = String::from_utf8(output.stdout).expect("sortie en UTF-8");
 
-    let golden =
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../legacy/tests/golden/expected.txt");
+    let golden = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(GOLDEN);
     if std::env::var_os("UPDATE_GOLDEN").is_some() {
         std::fs::write(&golden, &actual).unwrap();
     }

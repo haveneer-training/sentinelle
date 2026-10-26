@@ -15,6 +15,11 @@ publish = false
 name = "sentinelle-v0"
 path = "src/main.rs"
 
+[features]
+# Étape 7 du TP : la correction du double comptage (D3). Sans elle, la sortie reste
+# identique à celle de la v0.1 ; avec elle, le test compare à `tests/golden/expected-fix-d3.txt`.
+fix-d3 = []
+
 [dependencies]
 
 [dev-dependencies]

@@ -1,0 +1,28 @@
+=== Sentinelle v0.1 ===
+auth.log   : 12606 entrees (1 ignorees)
+access.log : 16519 entrees (5 ignorees)
+
+--- Top 10 des IP en echec ---
+     198.51.100.99    363
+     203.0.113.160     44
+       192.0.2.242     18
+       192.0.2.138     18
+        192.0.2.31     16
+     203.0.113.206     15
+      203.0.113.38     15
+     198.51.100.73     15
+      203.0.113.85     15
+     198.51.100.19     13
+
+--- Force brute (plus de 100 echecs) ---
+     198.51.100.99
+
+--- Password spraying (plus de 20 comptes) ---
+     203.0.113.160     44 comptes
+
+--- Top 5 des volumes web par utilisateur ---
+           b.faure     5518367289 octets
+         t.nicolas        9636754 octets
+           d.leroy        9468026 octets
+         h.garnier        9218893 octets
+        t.nicolas2        9154382 octets

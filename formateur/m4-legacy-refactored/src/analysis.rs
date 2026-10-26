@@ -17,13 +17,14 @@ pub const SPRAYING_ACCOUNTS: usize = 20;
 /// **Défaut conservé (D3)** : les lignes `Invalid user` comptent aussi, si bien qu'une
 /// tentative sur un compte inexistant compte deux fois. La correction tient en un mot
 /// (ne garder que [`AuthKind::Failed`]), mais elle change le rapport : elle se fait après
-/// la refactorisation, en régénérant la référence du test.
+/// la refactorisation, en régénérant la référence du test. Elle est ici derrière la
+/// feature `fix-d3`.
 pub fn count_failures_by_ip(entries: &[AuthEntry]) -> Vec<(&str, usize)> {
     // un `Vec` pour l'ordre d'apparition, une table pour trouver la position en O(1)
     let mut counts: Vec<(&str, usize)> = Vec::new();
     let mut position: HashMap<&str, usize> = HashMap::new();
     for entry in entries {
-        if matches!(entry.kind, AuthKind::Failed | AuthKind::InvalidUser) {
+        if is_failure(entry.kind) {
             let index = *position.entry(&entry.ip).or_insert_with(|| {
                 counts.push((&entry.ip, 0));
                 counts.len() - 1
@@ -33,6 +34,16 @@ pub fn count_failures_by_ip(entries: &[AuthEntry]) -> Vec<(&str, usize)> {
     }
     counts.sort_by_key(|&(_, count)| Reverse(count));
     counts
+}
+
+#[cfg(not(feature = "fix-d3"))]
+fn is_failure(kind: AuthKind) -> bool {
+    matches!(kind, AuthKind::Failed | AuthKind::InvalidUser)
+}
+
+#[cfg(feature = "fix-d3")]
+fn is_failure(kind: AuthKind) -> bool {
+    kind == AuthKind::Failed
 }
 
 /// Adresses de plus de [`BRUTEFORCE_FAILURES`] échecs, à partir des comptes déjà faits.
