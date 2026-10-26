@@ -103,6 +103,23 @@ mkdir -p .cargo && mv vendor-config.toml .cargo/config.toml
 cargo bench --offline
 ```
 
+## D'autres mesures à écrire (facultatif)
+
+Avec le harnais de `perf/` ou avec criterion, au choix. Quelques idées :
+
+- `summary/pipeline` fixe `lines_per_block` à 10 000 : faites-le varier de 100 à
+  100 000. Où se situe le compromis entre le coût des messages et des fusions (petits
+  blocs) et le parallélisme perdu (gros blocs) ?
+- La capacité du `sync_channel` de l'étape 9 : change-t-elle le débit, ou seulement la
+  mémoire ?
+- Des blocs bornés en octets plutôt qu'en lignes (voir la doc de `read_blocks`) : mêmes
+  performances, mais une mémoire mieux bornée ?
+- Le bench du pipeline lit un tampon déjà en mémoire. Sur un vrai fichier, comparez les
+  étapes 8 et 9 de bout en bout (`hyperfine`, ou un bench qui ouvre le fichier) : que
+  pèsent le disque et le cache du système ?
+- Sous criterion, `BenchmarkId::new("scope", threads)` et `BenchmarkId::new("pipeline",
+  threads)` dans un même groupe : le rapport HTML trace les deux courbes côte à côte.
+
 ## Diapositives
 
 Outils pour les tests et l'analyse de performance : « Mesurer avant d'optimiser »,

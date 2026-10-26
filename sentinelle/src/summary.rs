@@ -151,6 +151,11 @@ pub fn summarize_scoped(text: &[u8], threads: usize) -> Summary<&str> {
 
 /// Lit `reader` par blocs d'au plus `lines_per_block` lignes complètes et les envoie
 /// dans `blocks`, jusqu'à la fin du flux.
+///
+/// Les blocs sont comptés en lignes, l'unité d'un journal : la mémoire du pipeline est
+/// donc bornée en nombre de lignes, pas en octets, et des lignes très longues grossissent
+/// les blocs d'autant. Pour borner l'occupation réelle, on lirait des lignes tant que
+/// `block.len() < bytes_per_block` : un bloc ne dépasserait alors le seuil que d'une ligne.
 #[cfg_attr(not(feature = "step9"), allow(dead_code))] // à appeler dans le trou de l'étape 9
 fn read_blocks(
     mut reader: impl BufRead,
