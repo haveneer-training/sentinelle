@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Vérifie le dispositif de travail étape par étape : régénère travail/, puis pour
-# chaque étape 0..LAST_STEP (croissant), goto <n> doit compiler et laisser cargo test
-# rouge sur l'étape n seulement (les todo!() atteints sont tous ceux de l'étape n,
-# jamais d'une étape antérieure) ; solve <n> doit ensuite ramener cargo test au vert.
+# chaque étape 0..LAST_STEP (croissant), goto 0 puis next doivent compiler et laisser
+# cargo test rouge sur l'étape n seulement (les todo!() atteints sont tous ceux de
+# l'étape n, jamais d'une étape antérieure) ; solve <n> doit ensuite ramener cargo test
+# au vert. Au-delà de la dernière étape, next doit refuser sans rien changer.
 # À la dernière étape : aucun avertissement, l'analyse complète tourne sur un jeu de
 # données généré, et reset/solve rouvrent puis referment bien un trou.
 #
@@ -53,8 +54,16 @@ ok "travail/ engendré, sans formateur/, même toolchain ($(rustc --version | cu
 for n in $(seq 0 "$last_step"); do
     echo "==> étape ${n}"
 
-    echo "    goto ${n}"
-    cargo xtask goto "$n" >/dev/null
+    # l'étape 0 par son numéro, les suivantes avec `next` (après solve de la précédente)
+    if [ "$n" -eq 0 ]; then
+        echo "    goto ${n}"
+        cargo xtask goto "$n" >/dev/null
+    else
+        echo "    next"
+        cargo xtask next >/dev/null
+    fi
+    grep -qx "default = \[\"step${n}\"\]" sentinelle/Cargo.toml \
+        || fail "étape ${n} : sentinelle/Cargo.toml n'est pas passé à step${n}"
 
     echo "    build"
     cargo build --all-targets >/dev/null 2>&1 || fail "étape ${n} : cargo build échoue avant même solve"
@@ -87,6 +96,14 @@ echo "==> l'analyse complète tourne sur un jeu généré"
 cargo run --quiet --release -p sentinelle-gen -- --out data >/dev/null
 cargo run --quiet --release -p sentinelle -- data >/dev/null 2>&1 || fail "cargo run -p sentinelle -- data échoue"
 ok "cargo run -p sentinelle -- data"
+
+echo "==> next refuse d'aller au-delà de l'étape ${last_step}"
+if cargo xtask next >/dev/null 2>&1; then
+    fail "cargo xtask next réussit à la dernière étape"
+fi
+grep -qx "default = \[\"step${last_step}\"\]" sentinelle/Cargo.toml \
+    || fail "next a modifié l'étape courante alors qu'il a échoué"
+ok "next refusé, toujours à l'étape ${last_step}"
 
 echo "==> reset ${last_step} rouvre les trous, solve ${last_step} les referme"
 cargo xtask reset "$last_step" >/dev/null

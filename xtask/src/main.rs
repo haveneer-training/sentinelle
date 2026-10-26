@@ -17,6 +17,7 @@
 //! ```shell
 //! cargo xtask status                  # où j'en suis
 //! cargo xtask goto 3                  # passer à l'étape 3
+//! cargo xtask next                    # passer à l'étape suivante
 //! cargo xtask solve 2                 # remplir l'étape 2 pour moi (rattrapage)
 //! cargo xtask reset 2                 # la rouvrir pour la refaire
 //! ```
@@ -79,7 +80,7 @@ struct Block {
     end: usize,
 }
 
-// Analyse d'argv à la main, volontairement : `xtask` a sept sous-commandes, chacune
+// Analyse d'argv à la main, volontairement : `xtask` a huit sous-commandes, chacune
 // avec au plus un argument positionnel et un ou deux drapeaux (`--force`, `--dir`), pas
 // d'options à combiner — une dépendance comme `clap` (utilisée dans `src/app.rs` pour la
 // ligne de commande, bien plus riche, des deux binaires) n'y apporterait rien. `xtask`
@@ -97,6 +98,7 @@ fn main() {
         "update" => starter_dir(&args, &root).and_then(|out| update(&root, &out)),
         "status" => status(&root),
         "goto" => parse_step(args.get(1)).and_then(|n| goto(&root, n)),
+        "next" => next(&root),
         "solve" => parse_step(args.get(1)).and_then(|n| fill(&root, n, true)),
         "reset" => parse_step(args.get(1)).and_then(|n| reset(&root, n)),
         "verify" => verify(&root),
@@ -118,6 +120,7 @@ fn usage() -> String {
          \n\
            cargo xtask status                 où en est le projet, étape par étape\n\
            cargo xtask goto <n>               passer à l'étape n (0 à {LAST_STEP})\n\
+           cargo xtask next                   passer à l'étape suivante\n\
            cargo xtask solve <n>              remplir les trous de l'étape n\n\
            cargo xtask reset <n>              rouvrir les trous de l'étape n\n\
            cargo xtask start [--dir <p>]      créer le dossier de travail \
@@ -125,7 +128,7 @@ fn usage() -> String {
            cargo xtask update [--dir <p>]     y reporter les modifications du corrigé\n\
            cargo xtask verify                 vérifier les exercices courts (corrigé)\n\
          \n\
-         Les quatre premières commandes s'utilisent depuis le dossier de travail,\n\
+         Les cinq premières commandes s'utilisent depuis le dossier de travail,\n\
          `start`, `update` et `verify` depuis le dépôt du corrigé.\n"
     )
 }
@@ -463,6 +466,28 @@ fn goto(root: &Path, step: u8) -> Result<(), String> {
     Ok(())
 }
 
+/// Passe à l'étape qui suit l'étape courante.
+fn next(root: &Path) -> Result<(), String> {
+    let step = current_step(root).ok_or_else(|| {
+        format!("étape courante introuvable (ligne `default = [...]` de {STEP_MANIFEST})")
+    })?;
+    match next_step(step) {
+        Some(n) => goto(root, n),
+        None if step == LAST_STEP => Err(format!(
+            "vous êtes déjà à la dernière étape ({LAST_STEP}) : il n'y a pas d'étape suivante"
+        )),
+        None => Err("ce dépôt est le corrigé : il n'y a pas d'étape à ouvrir.\n\
+             Engendrez le dépôt de travail avec `cargo xtask start`."
+            .to_string()),
+    }
+}
+
+/// L'étape qui suit `step`, s'il y en a une. Au-delà de [`LAST_STEP`] (la sentinelle
+/// `step11` du corrigé), il n'y en a pas.
+fn next_step(step: u8) -> Option<u8> {
+    (step < LAST_STEP).then_some(step + 1)
+}
+
 /// Réécrit la ligne `default = [...]` du manifeste du fil rouge.
 fn set_default_feature(root: &Path, step: u8) -> Result<(), String> {
     rewrite_default(&root.join(STEP_MANIFEST), &format!("[\"step{step}\"]"))
@@ -542,7 +567,9 @@ fn status(root: &Path) -> Result<(), String> {
         let active = if n <= step { "tests actifs" } else { "" };
         println!("  {mark} étape {n} : {filled}/{total} bloc(s) complété(s)  {active}");
     }
-    println!("\n`cargo xtask goto <n>` pour changer d'étape.");
+    println!(
+        "\n`cargo xtask next` pour passer à la suivante, `cargo xtask goto <n>` pour changer d'étape."
+    );
     Ok(())
 }
 
@@ -1039,4 +1066,18 @@ fn file_stem(path: &Path) -> String {
     path.file_stem()
         .map(|s| s.to_string_lossy().into_owned())
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn next_step_stops_at_the_last_one() {
+        assert_eq!(next_step(0), Some(1));
+        assert_eq!(next_step(LAST_STEP - 1), Some(LAST_STEP));
+        assert_eq!(next_step(LAST_STEP), None);
+        // la sentinelle du corrigé
+        assert_eq!(next_step(LAST_STEP + 1), None);
+    }
 }

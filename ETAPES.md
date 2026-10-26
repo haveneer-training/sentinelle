@@ -16,7 +16,7 @@ sur onze étapes (0 à 10, la dernière en bonus). L'énoncé de chaque étape e
 ### La boucle
 
 ```shell
-cargo xtask goto 2   # ouvrir l'étape 2 (et compléter les précédentes restées vides)
+cargo xtask next     # ouvrir l'étape suivante (et compléter les précédentes restées vides)
 cargo test           # rouge : voici ce qu'il faut écrire, fichier et ligne à l'appui
 #   ... remplacer le todo!() entre les marqueurs >>> et <<< ...
 cargo test           # vert : l'étape est finie
@@ -30,14 +30,15 @@ coup, seulement ceux qui vous concernent.
 | Commande | Effet |
 |---|---|
 | `cargo xtask status` | avancement étape par étape |
+| `cargo xtask next` | passer à l'étape suivante, sans chercher son numéro (comme `goto` avec l'étape courante + 1) |
 | `cargo xtask goto <n>` | passer à l'étape n ; remplit au passage les trous des étapes précédentes **restés vides** |
 | `cargo xtask solve <n>` | remplir les trous de l'étape n à votre place (rattrapage) |
 | `cargo xtask reset <n>` | rouvrir les trous de l'étape n pour la refaire |
 | `cargo test` | vérifier |
 | `cargo run --release -p sentinelle -- data` | lancer l'analyse (complète à partir de l'étape 7) |
 
-`goto` **n'écrase jamais** ce que vous avez écrit : il ne remplit que les blocs encore
-occupés par un `todo!()`. Si vous décrochez, `goto` l'étape suivante et vous repartez d'un
+`goto` et `next` **n'écrasent jamais** ce que vous avez écrit : ils ne remplissent que les
+blocs encore occupés par un `todo!()`. Si vous décrochez, `next` et vous repartez d'un
 code cohérent.
 
 ### Où écrire
