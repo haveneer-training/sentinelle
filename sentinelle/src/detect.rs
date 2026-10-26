@@ -24,7 +24,8 @@ use std::{cmp::Reverse, collections::BinaryHeap};
 /// Nombre d'échecs d'authentification par adresse.
 ///
 /// Une tentative sur un compte inexistant produit deux lignes (`Invalid user …` puis
-/// `Failed password for invalid user …`) : elle ne doit compter qu'une fois.
+/// `Failed password for invalid user …`) : elle ne doit compter qu'une fois. On compte
+/// donc les seuls `Failed`, présents pour toute tentative, et on ignore `InvalidUser`.
 #[cfg_attr(not(feature = "step4"), allow(unused_variables))] // trou étape 4
 pub fn failures_by_ip(entries: &[AuthEntry<'_>]) -> HashMap<IpAddr, usize> {
     // TODO-STEP:4 Compter les `AuthEvent::Failed` par adresse, avec l'API `entry` (une
@@ -53,7 +54,8 @@ pub fn top_n<K: Ord, V: Ord>(items: impl IntoIterator<Item = (K, V)>, n: usize) 
     if n == 0 {
         return Vec::new();
     }
-    // à valeur égale, la plus petite clé l'emporte : d'où le `Reverse(key)`
+    // à valeur égale, la plus petite clé l'emporte : d'où le `Reverse(key)` ;
+    // le `Reverse(…)` extérieur fait un tas-min : `pop` éjecte le moins bon des retenus
     let mut heap = BinaryHeap::with_capacity(n + 1);
     for (key, value) in items {
         heap.push(Reverse((value, Reverse(key))));
@@ -181,14 +183,26 @@ pub fn detect_bruteforce(
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Compromise<'a> {
     pub ip: IpAddr,
+    /// Le compte connecté.
     pub user: &'a str,
+    /// Le serveur de la connexion réussie.
     pub host: &'a str,
+    /// L'instant de la connexion réussie.
     pub at: Timestamp,
+    /// Les échecs de `ip` avant cette connexion, depuis le début du journal.
     pub failures_before: usize,
 }
 
-/// Connexions réussies (`Accepted`) depuis une adresse ayant déjà cumulé au moins
+/// Connexions réussies (`Accepted`) depuis une adresse ayant *déjà* cumulé au moins
 /// `min_failures` échecs.
+///
+/// - Un échec est un `Failed` (comme pour [`failures_by_ip`], `InvalidUser` est ignoré),
+///   quels que soient le compte et le serveur visés.
+/// - « *déjà* » : seuls comptent les échecs placés **avant** la connexion dans `entries`,
+///   supposé dans l'ordre chronologique. Pas de fenêtre de temps, et le compte n'est
+///   jamais remis à zéro, même après un succès.
+/// - Chaque connexion qui passe le seuil est rapportée, pas seulement la première de
+///   l'adresse. Résultat dans l'ordre de `entries`.
 #[cfg_attr(not(feature = "step6"), allow(unused_variables))] // trou étape 6
 pub fn detect_compromise<'a>(
     entries: &[AuthEntry<'a>],

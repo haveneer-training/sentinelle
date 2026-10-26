@@ -26,6 +26,11 @@ pub fn load(path: &Path) -> std::io::Result<Vec<u8>> {
 ///
 /// Contrairement à `str::lines`, travaille sur des octets : une ligne d'UTF-8 invalide
 /// n'empêche pas de lire les suivantes.
+///
+/// Couper sur l'octet `\n` est sûr en UTF-8 : un octet `< 0x80` y est toujours un
+/// caractère ASCII entier, jamais un morceau de caractère multi-octets (UTF-8 est un
+/// [code auto-synchronisant](https://en.wikipedia.org/wiki/Self-synchronizing_code)).
+/// En revanche, seul `\n` est retiré : une fin de ligne `\r\n` laisse son `\r`.
 pub fn lines(text: &[u8]) -> impl Iterator<Item = &[u8]> {
     text.split_inclusive(|&b| b == b'\n')
         .map(|line| line.strip_suffix(b"\n").unwrap_or(line))

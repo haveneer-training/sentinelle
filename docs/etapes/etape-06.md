@@ -11,7 +11,8 @@ va jamais, et lance des commandes qu'elle ne lance jamais.
 ## Ce que vous écrivez
 
 1. `detect_compromise(entries, min_failures)` : les connexions réussies depuis une adresse
-   qui a déjà cumulé `min_failures` échecs.
+   qui a *déjà* cumulé `min_failures` échecs (`Failed`, tous comptes et serveurs confondus,
+   depuis le début du journal). Chaque connexion au-dessus du seuil est rapportée.
 2. `detect_new_access(entries, learn_until)` : la première connexion d'un utilisateur sur
    un serveur, quand elle survient après la période d'apprentissage.
 3. `detect_unusual_sudo(entries, learn_until)` : les `sudo` de comptes qui n'en ont lancé
