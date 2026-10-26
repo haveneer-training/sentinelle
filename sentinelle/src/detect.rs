@@ -119,8 +119,12 @@ pub fn detect_spraying(entries: &[AuthEntry<'_>], min_accounts: usize) -> Vec<Sp
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BruteForce {
     pub ip: IpAddr,
+    /// Le plus ancien échec de la fenêtre qui a ouvert la rafale.
     pub first: Timestamp,
+    /// Le dernier échec où la fenêtre atteignait le seuil : pas forcément le dernier échec
+    /// de l'adresse, ceux qui suivent sous le seuil ne prolongent pas la rafale.
     pub last: Timestamp,
+    /// Le nombre exact d'échecs de l'adresse de `first` à `last` inclus.
     pub failures: usize,
 }
 
@@ -128,6 +132,10 @@ pub struct BruteForce {
 ///
 /// Une rafale se prolonge tant que le seuil reste atteint ; elle n'est rapportée qu'une
 /// fois. Résultat par ordre chronologique de début.
+///
+/// `entries` doit être dans l'ordre chronologique. `failures` compte tous les échecs de
+/// `first` à `last`, y compris ceux arrivés pendant que la fenêtre était passée sous le
+/// seuil, avant que la rafale soit prolongée.
 #[cfg_attr(not(feature = "step5"), allow(unused_variables))] // trou étape 5
 pub fn detect_bruteforce(
     entries: &[AuthEntry<'_>],
@@ -139,7 +147,10 @@ pub fn detect_bruteforce(
     // Quand la fenêtre atteint le seuil, ouvrir ou prolonger la rafale en cours de
     // l'adresse ; une rafale interrompue depuis plus de `window` est terminée.
     // SOLUTION-BEGIN
+    // par adresse : les instants des échecs encore dans la fenêtre, du plus ancien au
+    // plus récent (les entrées arrivent dans l'ordre chronologique)
     let mut windows: HashMap<IpAddr, VecDeque<Timestamp>> = HashMap::new();
+    // par adresse : la rafale en cours, pas encore rapportée
     let mut open: HashMap<IpAddr, BruteForce> = HashMap::new();
     let mut found = Vec::new();
     for entry in entries {
@@ -148,29 +159,42 @@ pub fn detect_bruteforce(
         };
         let now = entry.timestamp;
         let recent = windows.entry(ip).or_default();
+        // l'échec entre à droite ; à gauche sortent ceux d'il y a `window` secondes ou plus
         recent.push_back(now);
         while recent.front().is_some_and(|&first| now - first >= window) {
             recent.pop_front();
         }
         if recent.len() < threshold {
+            // sous le seuil : ni ouverture ni prolongation ; l'échec reste dans `recent`
+            // et sera compté si la rafale en cours est prolongée
             continue;
         }
+        // seuil atteint : prolonger la rafale en cours si elle est assez récente,
+        // sinon en ouvrir une nouvelle
         match open.get_mut(&ip) {
             Some(burst) if now - burst.last < window => {
+                // tous les échecs depuis la fin connue de la rafale, y compris ceux passés
+                // sous le seuil : ils sont encore dans `recent` (trié), puisque
+                // `now - burst.last < window` (cas limite : test
+                // `a_burst_counts_the_failures_below_the_threshold`, étape 5)
+                burst.failures += recent.len() - recent.partition_point(|&t| t <= burst.last);
                 burst.last = now;
-                burst.failures += 1;
             }
             _ => {
+                // la rafale démarre au plus ancien échec de la fenêtre, pas à `now`
                 let burst = BruteForce {
                     ip,
                     first: recent[0],
                     last: now,
                     failures: recent.len(),
                 };
+                // `insert` rend l'éventuelle rafale précédente, terminée : `Option` est
+                // itérable, `extend` l'ajoute aux résultats s'il y en a une
                 found.extend(open.insert(ip, burst));
             }
         }
     }
+    // les rafales encore ouvertes en fin de journal sont terminées elles aussi
     found.extend(open.into_values());
     found.sort_by_key(|burst| (burst.first, burst.ip));
     found

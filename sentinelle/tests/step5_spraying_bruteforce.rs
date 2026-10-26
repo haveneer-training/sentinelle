@@ -69,6 +69,22 @@ fn a_burst_is_reported_once_and_a_pause_splits_it() {
 }
 
 #[test]
+fn a_burst_counts_the_failures_below_the_threshold() {
+    // à 6 s, la fenêtre [2, 6] passe sous le seuil ; le second échec à 6 s prolonge la
+    // rafale : le premier doit être compté aussi
+    let entries: Vec<_> = [0, 1, 2, 6, 6]
+        .into_iter()
+        .map(|t| failure(t, "192.0.2.1", "a"))
+        .collect();
+    let found = detect_bruteforce(&entries, 5, 3);
+    assert_eq!(found.len(), 1);
+    assert_eq!(
+        (found[0].first, found[0].last, found[0].failures),
+        (0, 6, 5)
+    );
+}
+
+#[test]
 fn finds_the_scenario_spraying_and_bruteforce() {
     let data = common::dataset();
     let scenario = &data.generated.scenario;
