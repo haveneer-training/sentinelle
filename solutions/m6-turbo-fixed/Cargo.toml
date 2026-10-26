@@ -1,8 +1,8 @@
 # Module 6 — corrigé des tickets de `bugs/` (sentinelle-turbo), référence formateur.
 #
-# Paquet autonome, hors du workspace du dépôt (qui ne doit pas dépendre de `formateur/`,
+# Paquet autonome, hors du workspace du dépôt (qui ne doit pas dépendre de `solutions/`,
 # absent des dossiers de travail) :
-#   cargo test --manifest-path formateur/m6-turbo-fixed/Cargo.toml
+#   cargo test --manifest-path solutions/m6-turbo-fixed/Cargo.toml
 # Les symptômes de la version boguée sont vérifiés par `scripts/check-bugs.sh`.
 [package]
 name = "sentinelle-turbo-fixed"

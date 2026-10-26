@@ -31,7 +31,7 @@ du corrigé dans un dossier de travail existant, en gardant les trous déjà rem
 courante (il refuse si un trou rempli disparaît du corrigé).
 
 `cargo xtask verify` contrôle les exercices courts (`exercices/m1` à `m3`) contre leurs
-corrigés. Le dossier `formateur/` (plan, scénario, corrigés, estimation) n'est jamais copié
+corrigés. Le dossier `solutions/` (plan, scénario, corrigés, estimation) n'est jamais copié
 dans `travail/`.
 <!-- CORRIGE-ONLY-END -->
 

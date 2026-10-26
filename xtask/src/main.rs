@@ -577,7 +577,7 @@ fn status(root: &Path) -> Result<(), String> {
 
 /// Ce que le dossier de travail reprend du corrigé.
 ///
-/// `formateur/` n'en fait jamais partie : il contient le plan et les clés de l'enquête.
+/// `solutions/` n'en fait jamais partie : il contient le plan et les clés de l'enquête.
 const STARTER_ENTRIES: [&str; 16] = [
     ".gitignore",
     "Cargo.toml",
@@ -960,7 +960,7 @@ fn copy_tree(from: &Path, to: &Path) -> Result<(), String> {
 
 // ------------------------------------------------------------------ vérification
 
-/// Modules dotés d'exercices courts : `exercices/<m>/examples` et `formateur/solutions/<m>`.
+/// Modules dotés d'exercices courts : `exercices/<m>/examples` et `solutions/<m>`.
 const SHORT_EXERCISES: [&str; 3] = ["m1", "m2", "m3"];
 /// Ligne d'en-tête qui annonce l'erreur attendue d'un exercice qui ne doit pas compiler.
 const EXPECTED_ERROR: &str = "Erreur attendue : ";
@@ -1014,10 +1014,10 @@ fn verify_module(
         }
     }
 
-    let solutions = rust_files_in(&root.join("formateur/solutions").join(module));
+    let solutions = rust_files_in(&root.join("solutions").join(module));
     if solutions.is_empty() {
         return Err(format!(
-            "aucun corrigé dans formateur/solutions/{module} : `verify` s'utilise dans le dépôt du corrigé"
+            "aucun corrigé dans solutions/{module} : `verify` s'utilise dans le dépôt du corrigé"
         ));
     }
     for path in solutions {

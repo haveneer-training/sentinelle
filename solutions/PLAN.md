@@ -1,6 +1,6 @@
 # Sentinelle — plan formateur
 
-Document formateur : retirer `formateur/` avant de distribuer le dépôt.
+Document formateur : retirer `solutions/` avant de distribuer le dépôt.
 
 Formation « Langage Rust — intermédiaire » (Ascent Formation, 5 jours, 35 h).
 Sentinelle sert de fil rouge à tous les blocs de TP. Les « Exemple TP » du programme
@@ -77,7 +77,7 @@ Fonctionne sur le jeu par défaut, mais contient volontairement :
   ils vérifient la détection du scénario réel, vérité terrain comprise.
 - **Les exercices courts** `exercices/m1` à `m3` (exemples de TP du cours) : `m1` ne
   compile pas (erreurs du vérificateur d'emprunts), `m2` et `m3` sont des `todo!()`.
-  Corrigés dans `formateur/solutions/`, contrôlés par `cargo xtask verify`.
+  Corrigés dans `solutions/`, contrôlés par `cargo xtask verify`.
 - **Le code existant, hors étapes** : `legacy/` (modules 1, 2, 4, 5) avec son test de
   caractérisation ; `perf/` (module 5) ; `bugs/` (module 6).
 
@@ -97,7 +97,7 @@ Durées, notions et références aux diapositives : `ESTIMATION.local.md` (non v
 | Fichier | Contenu |
 |---|---|
 | `solutions/m1`, `m2`, `m3` | corrigés des exercices courts (`cargo xtask verify`) |
-| `m4-legacy-refactored/` | la v0.1 refactorisée, sortie identique (paquet autonome : `cargo test --manifest-path formateur/m4-legacy-refactored/Cargo.toml`) ; étape 7 (correction de D3) derrière `--features fix-d3`, avec sa propre référence relue par `tests/fix_d3.rs` ; erreurs de chargement (D8) testées dans `tests/errors.rs` |
+| `m4-legacy-refactored/` | la v0.1 refactorisée, sortie identique (paquet autonome : `cargo test --manifest-path solutions/m4-legacy-refactored/Cargo.toml`) ; étape 7 (correction de D3) derrière `--features fix-d3`, avec sa propre référence relue par `tests/fix_d3.rs` ; erreurs de chargement (D8) testées dans `tests/errors.rs` |
 | `solutions/m5/` | mesures de référence, `parse_auth_event` sans allocation, hachage FNV |
 | `BUGS.md` | causes et corrections des tickets du module 6 |
 | `m6-turbo-fixed/` | `bugs/` corrigé, un test par ticket (paquet autonome) ; `scripts/check-bugs.sh` vérifie en plus que `bugs/` présente toujours chaque symptôme |

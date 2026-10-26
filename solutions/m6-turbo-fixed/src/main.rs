@@ -1,4 +1,4 @@
-//! sentinelle-turbo, corrigé des tickets du module 6 (voir `formateur/BUGS.md`). Chaque
+//! sentinelle-turbo, corrigé des tickets du module 6 (voir `solutions/BUGS.md`). Chaque
 //! correction est signalée par un commentaire `Ticket N`. Trois commandes :
 //!
 //! ```text

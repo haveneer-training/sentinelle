@@ -11,7 +11,7 @@ Reproductions vérifiées avec les jeux par défaut (graine 42).
 | 5 | `stream data` | les blocs s'agrègent puis plus rien | le thread principal garde `count_tx` : `for counts in count_rx` attend un émetteur qui n'émettra jamais | `drop(count_tx)` après le lancement des travailleurs (cf. étape 9) |
 | bonus | `stats data --threads 1` | l'IP de la force brute est absente du top | `accepted` « blanchit » une adresse dont tous les échecs visaient le compte finalement ouvert : c'est exactement une force brute réussie | supprimer la règle ; discuter : une heuristique qui efface des données dans un outil de détection |
 
-Corrigé complet : `formateur/m6-turbo-fixed/` (un commentaire `Ticket N` par correction,
+Corrigé complet : `solutions/m6-turbo-fixed/` (un commentaire `Ticket N` par correction,
 un test par ticket). `scripts/check-bugs.sh` reproduit chaque symptôme sur `bugs/`, puis
 lance les tests du corrigé ; la CI l'exécute.
 

@@ -24,7 +24,7 @@ copies complètes du journal d'authentification (les `.clone()` de `main`).
 | # | Résultat | Corrigé |
 |---|---|---|
 | O1 | messages : 24,1 → 12,4 ms (×1,9), comportement identique (vérifié sur tous les messages du jeu) | `parse_auth_event.rs` |
-| O2 | 12,8 s → < 1 s (voir `formateur/m4-legacy-refactored/src/analysis.rs`) | module 4 |
+| O2 | 12,8 s → < 1 s (voir `solutions/m4-legacy-refactored/src/analysis.rs`) | module 4 |
 | O3 | aucun gain mesurable (340 contre 346 Mo/s) : le code chaud est déjà dans une seule crate, rien à inliner entre crates. Bonne leçon : mesurer avant d'adopter une recette | — |
 | O4 | `failures_by_ip` (bruit ×4) : 2,11 → 0,95 ms (×2,2) | `fnv.rs` |
 | O5 | lecture en flux : pic mémoire borné par la taille des blocs, au prix d'une copie des noms (`Summary<String>`, étape 9) | étape 9 |

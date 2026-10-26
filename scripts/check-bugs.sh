@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Vérifie le TP du module 6 dans les deux sens :
-#   1. sentinelle-turbo (bugs/) présente bien chaque symptôme de formateur/BUGS.md, sur
+#   1. sentinelle-turbo (bugs/) présente bien chaque symptôme de solutions/BUGS.md, sur
 #      les jeux de docs/modules/module-6.md (une modification de bugs/ ou du générateur
 #      ne doit pas faire disparaître un ticket par mégarde) ;
-#   2. le corrigé formateur/m6-turbo-fixed passe fmt, clippy et ses tests.
+#   2. le corrigé solutions/m6-turbo-fixed passe fmt, clippy et ses tests.
 #
 # Le ticket 4 (interblocage) dépend de l'ordonnancement : s'il ne se reproduit pas en
 # quelques essais, le script le signale sans échouer.
@@ -116,8 +116,8 @@ run_for 60 "$work/out" "$work/err" "$release" stats "$work/data" --threads 1
 ! grep -q "^ *${brute_ip//./\\.} " "$work/out" || fail "ticket bonus : ${brute_ip} présente dans le top de stats"
 ok "ticket bonus : ${brute_ip} absente du top de stats"
 
-echo "==> corrigé (formateur/m6-turbo-fixed)"
-manifest=formateur/m6-turbo-fixed/Cargo.toml
+echo "==> corrigé (solutions/m6-turbo-fixed)"
+manifest=solutions/m6-turbo-fixed/Cargo.toml
 cargo fmt --manifest-path "$manifest" --check || fail "corrigé mal formaté"
 cargo clippy --quiet --manifest-path "$manifest" --all-targets -- -D warnings || fail "clippy sur le corrigé"
 cargo test --quiet --manifest-path "$manifest" || fail "tests du corrigé"

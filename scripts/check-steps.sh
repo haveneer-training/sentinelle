@@ -46,10 +46,10 @@ echo "==> étapes 0 à ${last_step}"
 echo "==> cargo xtask start --force"
 cargo xtask start --force >/dev/null
 cd "$root/travail"
-[ ! -e formateur ] || fail "travail/ contient formateur/ : il ne doit jamais être copié"
+[ ! -e solutions ] || fail "travail/ contient solutions/ : il ne doit jamais être copié"
 cmp -s rust-toolchain.toml "$root/rust-toolchain.toml" \
     || fail "travail/ n'a pas la même toolchain épinglée (rust-toolchain.toml) que le dépôt"
-ok "travail/ engendré, sans formateur/, même toolchain ($(rustc --version | cut -d' ' -f2))"
+ok "travail/ engendré, sans solutions/, même toolchain ($(rustc --version | cut -d' ' -f2))"
 
 for n in $(seq 0 "$last_step"); do
     echo "==> étape ${n}"

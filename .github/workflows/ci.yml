@@ -31,12 +31,12 @@ jobs:
         with:
           workspaces: |
             .
-            formateur/m4-legacy-refactored
+            solutions/m4-legacy-refactored
       - name: cargo fmt --check (hors legacy/)
         run: |
           cargo fmt --check -p sentinelle -p sentinelle-gen -p xtask -p sentinelle-perf \
             -p sentinelle-m1 -p sentinelle-m2 -p sentinelle-m3 -p sentinelle-turbo
-          rustfmt --edition 2024 --check formateur/solutions/*/*.rs
+          rustfmt --edition 2024 --check solutions/*/*.rs
       - name: cargo clippy (hors legacy/ et exercices/)
         run: >
           cargo clippy -p sentinelle -p sentinelle-gen -p xtask -p sentinelle-perf -p sentinelle-turbo
@@ -45,8 +45,8 @@ jobs:
         run: cargo test --workspace --exclude sentinelle-m1
       - name: cargo bench --no-run (perf/)
         run: cargo bench --no-run -p sentinelle-perf
-      - name: refactorisation de référence (formateur/m4-legacy-refactored)
-        working-directory: formateur/m4-legacy-refactored
+      - name: refactorisation de référence (solutions/m4-legacy-refactored)
+        working-directory: solutions/m4-legacy-refactored
         run: |
           cargo fmt --check
           cargo clippy --all-targets -- -D warnings
@@ -55,7 +55,7 @@ jobs:
           cargo test --features fix-d3
 
   bugs:
-    name: module 6 (symptômes de bugs/, corrigé formateur/m6-turbo-fixed)
+    name: module 6 (symptômes de bugs/, corrigé solutions/m6-turbo-fixed)
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +65,7 @@ jobs:
         with:
           workspaces: |
             .
-            formateur/m6-turbo-fixed
+            solutions/m6-turbo-fixed
       - name: scripts/check-bugs.sh
         run: scripts/check-bugs.sh
 
