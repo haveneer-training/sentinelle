@@ -31,8 +31,8 @@ du corrigé dans un dossier de travail existant, en gardant les trous déjà rem
 courante (il refuse si un trou rempli disparaît du corrigé).
 
 `cargo xtask verify` contrôle les exercices courts (`exercices/m1` à `m3`) contre leurs
-corrigés. Le dossier `solutions/` (plan, scénario, corrigés, estimation) n'est jamais copié
-dans `travail/`.
+corrigés. Le dossier [`solutions/`](solutions/README.md) (corrigés, défauts de la v0.1, scénario)
+n'est jamais copié dans `travail/`.
 <!-- CORRIGE-ONLY-END -->
 
 ## Démarrage
@@ -40,6 +40,14 @@ dans `travail/`.
 La toolchain est épinglée sur Rust 1.90.0 (`rust-toolchain.toml`) : rustup l'utilise d'office
 dans ce dossier, encore faut-il qu'elle soit installée
 (`rustup toolchain install 1.90.0 --profile minimal --component rustfmt,clippy`).
+
+Outillage requis en plus :
+
+- un éditeur avec le support de Rust (rust-analyzer, ou RustRover) ;
+- un débogueur, pour le module 6 : `gdb` sous Linux (`rust-gdb`), lldb sous macOS
+  (`rust-lldb`, après `DevToolsSecurity -enable` pour l'autoriser à s'attacher aux
+  processus) ;
+- un profileur, pour le module 5 : `perf` sous Linux, ou `samply` (`cargo install samply`).
 
 ```shell
 cargo build --release

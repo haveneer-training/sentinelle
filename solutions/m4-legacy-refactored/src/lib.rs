@@ -3,7 +3,7 @@
 //! La sortie est identique octet pour octet à celle de la v0.1 (le test
 //! `tests/golden.rs` le vérifie), défauts compris : corriger un comportement est une
 //! étape distincte, qui modifie la référence en connaissance de cause (voir
-//! `analysis::count_failures_by_ip`, défaut D3).
+//! `analysis::count_failures_by_ip`, défaut D3 du catalogue de `solutions/README.md`).
 //!
 //! | Module | Rôle |
 //! |---|---|

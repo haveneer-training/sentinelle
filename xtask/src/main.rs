@@ -577,7 +577,7 @@ fn status(root: &Path) -> Result<(), String> {
 
 /// Ce que le dossier de travail reprend du corrigé.
 ///
-/// `solutions/` n'en fait jamais partie : il contient le plan et les clés de l'enquête.
+/// `solutions/` n'en fait jamais partie : il contient les corrigés et les clés de l'enquête.
 const STARTER_ENTRIES: [&str; 16] = [
     ".gitignore",
     "Cargo.toml",
