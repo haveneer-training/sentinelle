@@ -1,33 +1,44 @@
-//! Exemple TP 1 (module 2) — corrigé.
+//! Exemple TP 1 (module 2) — Manipuler un vecteur (corrigé)
+//!
+//! Les instants des échecs d'une adresse, gardés **triés** dans un `Vec<i64>`.
+//! Remplacez chaque `todo!()` ; `main` vérifie le résultat.
 
+/// Ajoute un échec, plus récent que tous les autres.
 fn record(failures: &mut Vec<i64>, ts: i64) {
     failures.push(ts);
 }
 
+/// Une ligne arrivée en retard : l'insérer à sa place, sans retrier tout le vecteur.
 fn insert_late(failures: &mut Vec<i64>, ts: i64) {
     // `Err(i)` : absent, à insérer en `i` ; `Ok(i)` : déjà présent en `i`
     let position = failures.binary_search(&ts).unwrap_or_else(|i| i);
     failures.insert(position, ts);
 }
 
+/// Oublie les échecs antérieurs à `limit`.
 fn forget_before(failures: &mut Vec<i64>, limit: i64) {
     // trié : tout ce qui est à retirer est au début
     let keep_from = failures.partition_point(|&ts| ts < limit);
     failures.drain(..keep_from);
 }
 
+/// Retire les adresses des scanners connus : la boucle refusée de m1/ex04, cette fois
+/// en une ligne.
 fn forget_scanners(ips: &mut Vec<&str>, scanners: &[&str]) {
     ips.retain(|ip| !scanners.contains(ip));
 }
 
+/// Supprime les doublons (deux lignes identiques au même instant).
 fn deduplicate(failures: &mut Vec<i64>) {
     failures.dedup();
 }
 
+/// Les `n` échecs les plus récents (tous s'il y en a moins).
 fn latest(failures: &[i64], n: usize) -> &[i64] {
     &failures[failures.len().saturating_sub(n)..]
 }
 
+/// Le plus petit écart entre deux échecs consécutifs, s'il y en a au moins deux.
 fn shortest_gap(failures: &[i64]) -> Option<i64> {
     failures.windows(2).map(|w| w[1] - w[0]).min()
 }

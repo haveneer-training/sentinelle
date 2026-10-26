@@ -1,4 +1,11 @@
-//! Exercice 4 — corrigé.
+//! Exercice 4 — Modifier une collection pendant qu'on la parcourt (corrigé)
+//! Erreur attendue : E0502
+//!
+//! On veut retirer les entrées des scanners connus. En C++, effacer pendant un parcours
+//! invalide l'itérateur ; ici, le compilateur refuse. Expliquez pourquoi, puis corrigez :
+//! aucun emprunt de `ips` ne doit être vivant au moment où on le modifie.
+//!
+//! # Corrigé
 //!
 //! Le parcours emprunte `ips` ; `remove` voudrait le modifier pendant ce temps. (Et même
 //! sans le compilateur, l'indice `i` serait faux après le premier retrait.)
@@ -52,7 +59,8 @@ fn main() {
     }
     assert_eq!(ips, expected);
 
-    // 4. (itérateurs) la solution 1, en une expression : reconstruire un vecteur filtré : `into_iter` consomme l'ancien
+    // 4. (itérateurs) la solution 1 en une expression : un vecteur filtré, construit en
+    //    consommant l'ancien (`into_iter`)
     let ips: Vec<&str> = original
         .clone()
         .into_iter()

@@ -1,4 +1,12 @@
-//! Exercice 1 — corrigé.
+//! Exercice 1 — Emprunt partagé puis modification (corrigé)
+//! Erreur attendue : E0502
+//!
+//! On garde une référence vers l'adresse la plus active, puis on ajoute une nouvelle
+//! adresse au vecteur. Pourquoi le compilateur refuse-t-il ? Que pourrait-il arriver à
+//! `top` si `push` réallouait le tampon du vecteur ? Corrigez sans changer le résultat
+//! affiché.
+//!
+//! # Corrigé
 //!
 //! `push` peut réallouer le tampon : `top` pointerait alors dans une mémoire libérée.
 //! Solutions : copier ce qu'on veut garder (les éléments sont `Copy`), ou terminer

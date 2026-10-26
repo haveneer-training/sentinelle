@@ -1,4 +1,14 @@
-//! Exercice 2 — corrigé.
+//! Exercice 2 — Un tampon réutilisé (corrigé)
+//! Erreur attendue : E0502
+//!
+//! Lire ligne à ligne dans un même `String` évite une allocation par ligne. Mais on
+//! voudrait garder les noms d'utilisateur trouvés. Expliquez le conflit, puis proposez
+//! **deux** corrections : l'une qui copie les noms, l'autre qui n'en copie aucun (en
+//! changeant la façon de lire).
+//!
+//! Indice : <https://doc.rust-lang.org/std/str/index.html>
+//!
+//! # Corrigé
 //!
 //! `users` garde des tranches de `buffer`, que `clear` puis `read_line` modifient.
 //! Deux solutions : posséder les noms (`String`), ou emprunter au texte complet, qui

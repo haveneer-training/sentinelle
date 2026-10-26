@@ -1,4 +1,13 @@
-//! Exercice 6 — corrigé.
+//! Exercice 6 — Annoter les durées de vie d'une fonction (corrigé)
+//! Erreur attendue : E0106
+//!
+//! Le compilateur ne sait pas à quelle entrée la sortie de `before` est liée.
+//! 1. Ajoutez les annotations : une première idée (`'a` partout) compile-t-elle avec ce
+//!    `main` ? Pourquoi ?
+//! 2. Trouvez l'annotation qui exprime exactement le contrat : la sortie emprunte `line`,
+//!    jamais `separator`.
+//!
+//! # Corrigé
 //!
 //! Avec `fn before<'a>(line: &'a str, separator: &'a str) -> &'a str`, `'a` doit couvrir
 //! les deux arguments : `separator`, détruit à la fin du bloc, ne vit pas assez longtemps

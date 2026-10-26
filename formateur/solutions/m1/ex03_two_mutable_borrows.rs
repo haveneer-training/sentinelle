@@ -1,4 +1,12 @@
-//! Exercice 3 — corrigé.
+//! Exercice 3 — Deux emprunts exclusifs (corrigé)
+//! Erreur attendue : E0499
+//!
+//! Deux adresses appartiennent au même attaquant : on reporte les échecs de la seconde
+//! sur la première. Pourquoi deux `get_mut` simultanés sont-ils interdits, même sur deux
+//! clés différentes ? Corrigez de deux façons : en limitant la durée des emprunts, puis
+//! avec `HashMap::get_disjoint_mut` (Rust ≥ 1.86).
+//!
+//! # Corrigé
 //!
 //! `get_mut` emprunte **toute** la table de façon exclusive : le compilateur ne sait pas
 //! que les deux clés diffèrent (et une insertion pourrait tout déplacer).

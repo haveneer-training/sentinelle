@@ -1,4 +1,8 @@
-//! Exemple TP 1 (module 3) — corrigé.
+//! Exemple TP 1 (module 3) — Créer des threads et les synchroniser (corrigé)
+//!
+//! Quatre fragments de journal, un thread par fragment.
+//! 1. `count_with_join` : chaque thread **renvoie** son compte, récupéré par `join`.
+//! 2. `count_with_mutex` : les threads ajoutent leur compte à un total partagé.
 
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -14,6 +18,7 @@ fn failures(fragment: &str) -> usize {
     fragment.lines().filter(|l| l.starts_with("Failed")).count()
 }
 
+/// Un `thread::spawn` par fragment, puis la somme des résultats des `join()`.
 fn count_with_join() -> usize {
     // les fragments sont `&'static str` : `spawn` peut les emporter
     let handles: Vec<_> = FRAGMENTS
@@ -26,6 +31,7 @@ fn count_with_join() -> usize {
         .sum()
 }
 
+/// Un total `Arc<Mutex<usize>>` partagé ; chaque thread y ajoute son compte.
 fn count_with_mutex() -> usize {
     let total = Arc::new(Mutex::new(0));
     let handles: Vec<_> = FRAGMENTS

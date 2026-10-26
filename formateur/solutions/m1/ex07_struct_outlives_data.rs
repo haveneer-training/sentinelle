@@ -1,4 +1,11 @@
-//! Exercice 7 — corrigé.
+//! Exercice 7 — Une structure qui survit à ses données (corrigé)
+//! Erreur attendue : E0597
+//!
+//! `Report` emprunte le texte du journal. Le rapport est construit dans un bloc, puis
+//! utilisé après. Lisez le message d'erreur : quelle valeur est détruite trop tôt, et
+//! où ? Corrigez sans rien copier, puis en copiant ; quand préférer l'un ou l'autre ?
+//!
+//! # Corrigé
 //!
 //! `text` est détruit à la fin du bloc alors que `report` l'emprunte encore. Sans copie :
 //! faire vivre `text` aussi longtemps que le rapport. Avec copie : `Report` possède sa

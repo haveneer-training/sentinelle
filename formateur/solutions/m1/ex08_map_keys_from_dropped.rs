@@ -1,4 +1,12 @@
-//! Exercice 8 — corrigé.
+//! Exercice 8 — Des clés qui empruntent une chaîne éphémère (corrigé)
+//! Erreur attendue : E0597
+//!
+//! On compte les connexions par utilisateur. Chaque ligne est recopiée dans une `String`
+//! fraîche (comme le ferait une lecture ligne à ligne), et la table garde des `&str`.
+//! Corrigez de deux façons : en changeant le type des clés, puis en supprimant la copie
+//! des lignes.
+//!
+//! # Corrigé
 //!
 //! Chaque `line` meurt à la fin de son tour de boucle, ses tranches avec elle.
 

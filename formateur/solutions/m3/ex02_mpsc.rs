@@ -1,4 +1,7 @@
-//! Exemple TP 2 (module 3) — corrigé.
+//! Exemple TP 2 (module 3) — Communiquer par canaux (`std::sync::mpsc`) (corrigé)
+//!
+//! Trois capteurs (threads) surveillent chacun un serveur et **envoient** une alerte par
+//! échec repéré ; le thread principal les **reçoit** et les range.
 
 use std::sync::mpsc;
 use std::thread;
@@ -12,6 +15,10 @@ const SERVERS: [(&str, &str); 3] = [
     ("srv-db-02", "Failed password for postgres\n"),
 ];
 
+/// Toutes les alertes `"serveur : ligne"`, triées.
+///
+/// Un `Sender` cloné par capteur. Attention : la boucle de réception ne se termine que
+/// quand **tous** les émetteurs ont disparu.
 fn collect_alerts() -> Vec<String> {
     let (tx, rx) = mpsc::channel();
     for (server, log) in SERVERS {
