@@ -42,7 +42,6 @@ l'exécute. La documentation est du code testé.
 
 ## Diapositives
 
-« Les conteneurs basiques 2/4 : array, slice, Box » (Les conteneurs de données et leurs usages) ;
 « String et str : le couple de base », « Des octets au texte : l'UTF-8 aux frontières » (Les
 chaînes de caractères).
 
