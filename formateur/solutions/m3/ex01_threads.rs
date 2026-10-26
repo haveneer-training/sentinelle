@@ -25,6 +25,9 @@ fn count_with_join() -> usize {
         .into_iter()
         .map(|fragment| thread::spawn(move || failures(fragment)))
         .collect();
+    // Le `collect` est indispensable : les itérateurs sont paresseux, et sans lui chaque
+    // thread serait joint avant que le suivant soit lancé (exécution séquentielle). Une
+    // fois tous lancés, l'ordre des `join` est indifférent : on attend le plus lent.
     handles
         .into_iter()
         .map(|h| h.join().expect("thread paniqué"))
