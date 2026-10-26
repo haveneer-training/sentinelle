@@ -26,13 +26,18 @@ Versionnez (`git commit`) après chaque étape verte : vous pourrez toujours rev
 2. **Emprunter au lieu de copier.** Les fonctions d'analyse prennent `Vec<AuthEntry>` par
    valeur, d'où les `.clone()` à chaque appel : passez-les en `&[AuthEntry]`. Qu'est-ce
    qui disparaît dans `main` ? `detect_bruteforce` recompte ce que `count_failures_by_ip`
-   vient de compter : réutilisez le résultat.
+   vient de compter : réutilisez le résultat. Dans `parse_auth_line`, le message est
+   découpé puis recollé (`join`) : `splitn(4, ' ')` en donne le reste sans copie. De même,
+   `line: String` et `&Vec<String>` en paramètre : `&str` et `&[&str]` suffisent.
 3. **Des types qui disent ce qu'ils sont.** `kind: String` devient un `enum AuthKind`.
-   Les champs jamais lus disparaissent (le compilateur vous les désigne).
+   Les champs jamais lus disparaissent (le compilateur vous les désigne). `bytes` reste une
+   `String` reparsée par l'analyse : lue une fois au parsing, elle devient un
+   `Option<u64>` (`-` donne `None`).
 4. **Bibliothèque et binaire.** Créez `src/lib.rs` ; `main.rs` ne garde que la ligne de
    commande. Découpez en modules : `entry` (les types), `parse` (lecture d'une ligne),
    `analysis` (comptages, détections), `report` (mise en forme). Tout est privé par défaut :
-   n'exposez que ce que `main` utilise, `pub(crate)` pour le reste.
+   n'exposez que ce que `main` utilise, plus ce que ces signatures font apparaître (types
+   des entrées, erreur de chargement) ; `pub(crate)` pour le reste.
 5. **Des erreurs au lieu de paniques.** `read_to_string(..).unwrap()` devient un
    `enum LoadError` (fichier illisible, UTF-8 invalide avec sa position) qui implémente
    `Display` et `std::error::Error` ; `main` l'affiche et renvoie `ExitCode::FAILURE`.
@@ -58,7 +63,9 @@ Versionnez (`git commit`) après chaque étape verte : vous pourrez toujours rev
 2. Un `///` sur chaque élément public, avec une section `# Errors` quand une fonction
    renvoie `Result`.
 3. Des exemples dans la documentation de `parse` : ils sont compilés et exécutés par
-   `cargo test --doc`. Montrez un cas qui marche et un cas refusé.
+   `cargo test --doc`. Montrez un cas qui marche et un cas refusé. Un doctest utilise la
+   crate comme le ferait un utilisateur extérieur : `parse` doit devenir public. C'est
+   une exception assumée à la règle de l'étape 4, à justifier dans la doc de crate.
 4. `#![warn(missing_docs)]` : plus rien d'oublié.
 5. `cargo doc --open` : lisez votre documentation comme un utilisateur la lirait.
 

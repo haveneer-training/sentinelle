@@ -65,6 +65,13 @@ fn failure_counts_match_failed_password_lines() {
 #[test]
 fn bruteforce_section_follows_fixed_counts() {
     let fixed = read("tests/golden/expected-fix-d3.txt");
+    // le seuil vient du titre de la section, lui-même tiré de la constante du code
+    let threshold: usize = fixed
+        .lines()
+        .find_map(|line| line.strip_prefix("--- Force brute (plus de "))
+        .and_then(|rest| rest.split_whitespace().next())
+        .and_then(|n| n.parse().ok())
+        .expect("titre de la section Force brute");
     let above: Vec<&str> = section(&fixed, "Top 10 des IP en echec")
         .into_iter()
         .filter(|line| {
@@ -73,7 +80,7 @@ fn bruteforce_section_follows_fixed_counts() {
                 .unwrap()
                 .parse::<usize>()
                 .unwrap()
-                > 100
+                > threshold
         })
         .map(|line| line.split_whitespace().next().unwrap())
         .collect();

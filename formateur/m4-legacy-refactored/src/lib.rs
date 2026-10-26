@@ -3,19 +3,25 @@
 //! La sortie est identique octet pour octet à celle de la v0.1 (le test
 //! `tests/golden.rs` le vérifie), défauts compris : corriger un comportement est une
 //! étape distincte, qui modifie la référence en connaissance de cause (voir
-//! [`analysis::count_failures_by_ip`]).
+//! `analysis::count_failures_by_ip`, défaut D3).
 //!
 //! | Module | Rôle |
 //! |---|---|
 //! | [`entry`] | les entrées analysées |
 //! | [`parse`] | lecture d'une ligne |
-//! | [`analysis`] | comptages et détections |
+//! | `analysis` | comptages et détections (privé) |
 //! | [`report`] | mise en forme du rapport |
 //! | [`error`] | erreurs de chargement |
+//!
+//! L'API publique se limite à ce que `main` utilise ([`load`], [`Journals`],
+//! [`report::render`]) et à ce que leurs signatures font apparaître ([`entry`],
+//! [`error::LoadError`]). Seule exception, [`parse`] est public pour que ses exemples
+//! soient des doctests : un doctest est compilé comme une crate extérieure, il ne voit
+//! que l'API publique.
 
 #![warn(missing_docs)]
 
-pub mod analysis;
+mod analysis;
 pub mod entry;
 pub mod error;
 pub mod parse;

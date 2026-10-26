@@ -16,20 +16,19 @@ use crate::entry::{AuthEntry, AuthKind, WebEntry};
 /// assert_eq!(parse_auth_line("tronquée"), None);
 /// ```
 pub fn parse_auth_line(line: &str) -> Option<AuthEntry> {
-    let words: Vec<&str> = line.split(' ').collect();
-    if words.len() < 4 {
-        return None;
-    }
-    let message = &line[words[..3].iter().map(|w| w.len() + 1).sum::<usize>()..];
-    // positions des mots dans la ligne entière (horodatage, serveur et processus compris)
+    // le message suit les trois premiers mots ; pas de quatrième mot, pas d'entrée
+    let message = line.splitn(4, ' ').nth(3)?;
+    let words: Vec<&str> = message.split(' ').collect();
+    // positions des mots dans le message (la v0.1 comptait depuis le début de la ligne,
+    // trois mots plus tôt)
     let (kind, user_at, ip_at) = if message.starts_with("Failed password for invalid user ") {
-        (AuthKind::Failed, 8, 10)
+        (AuthKind::Failed, 5, 7)
     } else if message.starts_with("Failed password for ") {
-        (AuthKind::Failed, 6, 8)
+        (AuthKind::Failed, 3, 5)
     } else if message.starts_with("Accepted ") {
-        (AuthKind::Accepted, 6, 8)
+        (AuthKind::Accepted, 3, 5)
     } else if message.starts_with("Invalid user ") {
-        (AuthKind::InvalidUser, 5, 7)
+        (AuthKind::InvalidUser, 2, 4)
     } else {
         return Some(AuthEntry {
             kind: AuthKind::Other,
@@ -52,7 +51,8 @@ pub fn parse_auth_line(line: &str) -> Option<AuthEntry> {
 ///
 /// let line = r#"10.1.0.42 - v.michel [2026-11-09T09:43:02Z] "GET / HTTP/1.1" 200 1834 44"#;
 /// let entry = parse_web_line(line).unwrap();
-/// assert_eq!((entry.user.as_str(), entry.bytes.as_str()), ("v.michel", "1834"));
+/// assert_eq!((entry.user.as_str(), entry.bytes), ("v.michel", Some(1834)));
+/// assert_eq!(parse_web_line("10.1.0.42 - v.michel"), None);
 /// ```
 pub fn parse_web_line(line: &str) -> Option<WebEntry> {
     let words: Vec<&str> = line.split(' ').collect();
@@ -61,7 +61,7 @@ pub fn parse_web_line(line: &str) -> Option<WebEntry> {
     }
     Some(WebEntry {
         user: words[2].to_string(),
-        bytes: words[8].to_string(),
+        bytes: words[8].parse().ok(),
     })
 }
 
@@ -127,9 +127,9 @@ mod tests {
     }
 
     #[test]
-    fn web_size_dash_is_kept_as_is() {
+    fn web_size_dash_has_no_size() {
         let line = r#"10.1.0.42 - - [2026-11-09T09:43:02Z] "GET / HTTP/1.1" 304 - 12"#;
         let entry = parse_web_line(line).unwrap();
-        assert_eq!((entry.user.as_str(), entry.bytes.as_str()), ("-", "-"));
+        assert_eq!((entry.user.as_str(), entry.bytes), ("-", None));
     }
 }

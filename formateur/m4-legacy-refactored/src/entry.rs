@@ -2,6 +2,10 @@
 //!
 //! Seuls les champs effectivement lus par les analyses sont conservés : la v0.1 en
 //! copiait huit par ligne web pour n'en lire que deux.
+//!
+//! Variante possible, plus loin du code d'origine : porter `user` et `ip` dans les
+//! variantes elles-mêmes (`Failed { user, ip }`, …, `Other`), comme le fait le fil rouge ;
+//! une ligne [`AuthKind::Other`] n'aurait plus de champs vides.
 
 /// Nature d'une ligne de `auth.log`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -32,6 +36,6 @@ pub struct AuthEntry {
 pub struct WebEntry {
     /// Utilisateur authentifié, ou `-`.
     pub user: String,
-    /// Taille de la réponse, ou `-`.
-    pub bytes: String,
+    /// Taille de la réponse ; `None` si elle est illisible (`-` pour une réponse sans corps).
+    pub bytes: Option<u64>,
 }

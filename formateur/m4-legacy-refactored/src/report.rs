@@ -1,7 +1,10 @@
 //! Mise en forme du rapport, identique à celle de la v0.1.
 
 use crate::Journals;
-use crate::analysis::{bytes_by_user, count_failures_by_ip, detect_bruteforce, detect_spraying};
+use crate::analysis::{
+    BRUTEFORCE_FAILURES, SPRAYING_ACCOUNTS, bytes_by_user, count_failures_by_ip, detect_bruteforce,
+    detect_spraying,
+};
 use std::fmt::Write;
 
 /// Le rapport complet, tel qu'affiché sur la sortie standard.
@@ -32,11 +35,17 @@ fn write_report(out: &mut String, journals: &Journals) -> std::fmt::Result {
     for (ip, count) in failures.iter().take(10) {
         writeln!(out, "{ip:>18} {count:>6}")?;
     }
-    writeln!(out, "\n--- Force brute (plus de 100 echecs) ---")?;
+    writeln!(
+        out,
+        "\n--- Force brute (plus de {BRUTEFORCE_FAILURES} echecs) ---"
+    )?;
     for ip in detect_bruteforce(&failures) {
         writeln!(out, "{ip:>18}")?;
     }
-    writeln!(out, "\n--- Password spraying (plus de 20 comptes) ---")?;
+    writeln!(
+        out,
+        "\n--- Password spraying (plus de {SPRAYING_ACCOUNTS} comptes) ---"
+    )?;
     for (ip, accounts) in detect_spraying(&journals.auth) {
         writeln!(out, "{ip:>18} {accounts:>6} comptes")?;
     }
