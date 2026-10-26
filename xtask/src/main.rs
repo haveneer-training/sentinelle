@@ -25,6 +25,10 @@
 //! projet : `goto` ne remplit que les trous **restés vides**, et `start` refuse
 //! d'écraser un dossier de travail existant sans `--force`. `start` écrit dans
 //! `travail/` par défaut ; `--dir <chemin>` en choisit un autre.
+//!
+//! Pendant la mise au point des exercices, `cargo xtask update [--dir <chemin>]`, lancé
+//! depuis le corrigé, reporte ses modifications dans un dossier de travail existant sans
+//! perdre les trous déjà remplis ni l'étape courante.
 
 use std::collections::BTreeMap;
 use std::fs;
@@ -75,7 +79,7 @@ struct Block {
     end: usize,
 }
 
-// Analyse d'argv à la main, volontairement : `xtask` a cinq sous-commandes, chacune
+// Analyse d'argv à la main, volontairement : `xtask` a sept sous-commandes, chacune
 // avec au plus un argument positionnel et un ou deux drapeaux (`--force`, `--dir`), pas
 // d'options à combiner — une dépendance comme `clap` (utilisée dans `src/app.rs` pour la
 // ligne de commande, bien plus riche, des deux binaires) n'y apporterait rien. `xtask`
@@ -90,6 +94,7 @@ fn main() {
             let force = args.iter().any(|a| a == "--force");
             starter_dir(&args, &root).and_then(|out| make_starter(&root, &out, force))
         }
+        "update" => starter_dir(&args, &root).and_then(|out| update(&root, &out)),
         "status" => status(&root),
         "goto" => parse_step(args.get(1)).and_then(|n| goto(&root, n)),
         "solve" => parse_step(args.get(1)).and_then(|n| fill(&root, n, true)),
@@ -111,16 +116,17 @@ fn usage() -> String {
     format!(
         "Outillage du fil rouge « Sentinelle »\n\
          \n\
-           cargo xtask status                où en est le projet, étape par étape\n\
+           cargo xtask status                 où en est le projet, étape par étape\n\
            cargo xtask goto <n>               passer à l'étape n (0 à {LAST_STEP})\n\
            cargo xtask solve <n>              remplir les trous de l'étape n\n\
            cargo xtask reset <n>              rouvrir les trous de l'étape n\n\
            cargo xtask start [--dir <p>]      créer le dossier de travail \
 (par défaut : {WORKDIR}/)\n\
+           cargo xtask update [--dir <p>]     y reporter les modifications du corrigé\n\
            cargo xtask verify                 vérifier les exercices courts (corrigé)\n\
          \n\
          Les quatre premières commandes s'utilisent depuis le dossier de travail,\n\
-         `start` et `verify` depuis le dépôt du corrigé.\n"
+         `start`, `update` et `verify` depuis le dépôt du corrigé.\n"
     )
 }
 
@@ -542,24 +548,53 @@ fn status(root: &Path) -> Result<(), String> {
 
 // ------------------------------------------------------------------ génération
 
-/// Engendre le dépôt de travail à partir du corrigé.
-fn make_starter(root: &Path, out: &Path, force: bool) -> Result<(), String> {
+/// Ce que le dossier de travail reprend du corrigé.
+///
+/// `formateur/` n'en fait jamais partie : il contient le plan et les clés de l'enquête.
+const STARTER_ENTRIES: [&str; 16] = [
+    ".gitignore",
+    "Cargo.toml",
+    "Cargo.lock",
+    "rust-toolchain.toml",
+    "ETAPES.md",
+    "README.md",
+    "docs",
+    "generator",
+    "legacy",
+    "sentinelle",
+    "exercices",
+    "perf",
+    "bugs",
+    "xtask/Cargo.toml",
+    "xtask/src",
+    ".cargo",
+];
+
+/// Refuse de continuer si `root` n'est pas le dépôt du corrigé.
+fn ensure_reference(root: &Path) -> Result<(), String> {
     // Le dépôt du corrigé est la source : sans ses marqueurs, il n'y a rien à trouer.
-    // Cette commande lancée depuis un dossier de travail ne produirait qu'une copie
+    // Ces commandes lancées depuis un dossier de travail ne produiraient qu'une copie
     // sans exercices, ce qui serait une fausse bonne surprise.
     let is_reference = source_files(root).iter().any(|p| {
         fs::read_to_string(p)
             .map(|t| t.contains(SOLUTION_BEGIN))
             .unwrap_or(false)
     });
-    if !is_reference {
-        return Err(
+    if is_reference {
+        Ok(())
+    } else {
+        Err(
             "ce dépôt ne contient aucun bloc de référence : c'est déjà un dossier de \
-                    travail.\nLancez `cargo xtask start` depuis le dépôt du corrigé, ou \
+                    travail.\nLancez cette commande depuis le dépôt du corrigé, ou \
                     `cargo xtask status` pour voir où vous en êtes."
                 .to_string(),
-        );
+        )
     }
+}
+
+/// Engendre le dépôt de travail à partir du corrigé.
+fn make_starter(root: &Path, out: &Path, force: bool) -> Result<(), String> {
+    ensure_reference(root)?;
 
     // Ne jamais détruire le travail de quelqu'un sans le lui demander.
     if out.exists() && fs::read_dir(out).map(|d| d.count() > 0).unwrap_or(false) {
@@ -567,7 +602,9 @@ fn make_starter(root: &Path, out: &Path, force: bool) -> Result<(), String> {
             return Err(format!(
                 "{} existe déjà et n'est pas vide.\nSi c'est votre dossier de travail, \
                  il contient ce que vous avez écrit : ne le régénérez pas.\nPour le \
-                 remplacer malgré tout — et perdre son contenu — ajoutez --force.",
+                 remplacer malgré tout — et perdre son contenu — ajoutez --force.\nPour \
+                 y reporter les dernières modifications du corrigé, utilisez \
+                 `cargo xtask update`.",
                 out.display()
             ));
         }
@@ -575,28 +612,27 @@ fn make_starter(root: &Path, out: &Path, force: bool) -> Result<(), String> {
     }
     fs::create_dir_all(out).map_err(|e| e.to_string())?;
 
+    let holes = generate(root, out)?;
+
+    let shown = out.strip_prefix(root).unwrap_or(out);
+    println!(
+        "Dossier de travail créé : {} ({holes} trous à combler).\n",
+        shown.display()
+    );
+    println!("  cd {}", shown.display());
+    println!("  cargo test           # tests rouges : l'étape 0 vous attend");
+    println!("  cargo xtask status   # à tout moment, pour savoir où vous en êtes\n");
+    println!("Le déroulement d'une étape est expliqué dans ETAPES.md.");
+    Ok(())
+}
+
+/// Écrit dans `out`, supposé vide, le dossier de travail tiré du corrigé `root`, et
+/// renvoie le nombre de trous.
+fn generate(root: &Path, out: &Path) -> Result<usize, String> {
     let mut reference = String::new();
     let mut holes = 0;
 
-    // `formateur/` n'est jamais copié : il contient le plan et les clés de l'enquête.
-    for entry in [
-        ".gitignore",
-        "Cargo.toml",
-        "Cargo.lock",
-        "rust-toolchain.toml",
-        "ETAPES.md",
-        "README.md",
-        "docs",
-        "generator",
-        "legacy",
-        "sentinelle",
-        "exercices",
-        "perf",
-        "bugs",
-        "xtask/Cargo.toml",
-        "xtask/src",
-        ".cargo",
-    ] {
+    for entry in STARTER_ENTRIES {
         copy_tree(&root.join(entry), &out.join(entry))?;
     }
 
@@ -669,16 +705,155 @@ fn make_starter(root: &Path, out: &Path, force: bool) -> Result<(), String> {
     // travail.
     set_default_feature(out, 0)?;
 
+    Ok(holes)
+}
+
+// ------------------------------------------------------------------ mise à jour
+
+/// Reporte les dernières modifications du corrigé dans un dossier de travail existant.
+///
+/// Sert pendant la mise au point des exercices : le dossier de travail est engendré à
+/// nouveau, à côté, puis ce que le stagiaire a écrit y est replacé avant qu'il ne remplace
+/// l'ancien. Sont conservés : les trous remplis (ceux remplis par `solve` reprennent le
+/// nouveau corrigé), l'étape courante, et tout ce qui n'est pas tiré du corrigé (`target/`,
+/// `data/`, un éventuel `.git/`). Tout le reste — documentation, tests, code hors des trous
+/// — est remplacé.
+fn update(root: &Path, out: &Path) -> Result<(), String> {
+    ensure_reference(root)?;
+    if !out.join(REFERENCE).is_file() {
+        return Err(format!(
+            "{} n'est pas un dossier de travail ({REFERENCE} introuvable).\nCréez-le avec \
+             `cargo xtask start`.",
+            out.display()
+        ));
+    }
+    let out = fs::canonicalize(out).map_err(|e| format!("{} : {e}", out.display()))?;
+    let name = out
+        .file_name()
+        .ok_or_else(|| format!("{} : chemin sans nom de dossier", out.display()))?;
+    // À côté du dossier de travail, pour que les renommages restent sur le même disque.
+    let staging = out.with_file_name(format!(".{}-update", name.to_string_lossy()));
+    if staging.exists() {
+        fs::remove_dir_all(&staging).map_err(|e| format!("{} : {e}", staging.display()))?;
+    }
+    fs::create_dir_all(&staging).map_err(|e| e.to_string())?;
+
+    let result = update_into(root, &out, &staging);
+    let _ = fs::remove_dir_all(&staging);
+    result
+}
+
+fn update_into(root: &Path, out: &Path, staging: &Path) -> Result<(), String> {
+    let holes = generate(root, staging)?;
+    let old_reference = load_reference(out)?;
+    let new_reference = load_reference(staging)?;
+    let mut kept = 0;
+    let mut lost = Vec::new();
+
+    for path in source_files(staging) {
+        let key = relative(staging, &path);
+        let Ok(old_text) = fs::read_to_string(out.join(&key)) else {
+            continue;
+        };
+        let new_text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        let old_blocks = find_blocks(&old_text, REGION_BEGIN, REGION_END);
+        let new_blocks = find_blocks(&new_text, REGION_BEGIN, REGION_END);
+
+        // Les blocs se correspondent par leur rang au sein de leur étape : un trou ajouté
+        // ou retiré à une étape ne décale pas ceux des autres.
+        let old_ranks = step_ranks(&old_blocks);
+        let new_ranks = step_ranks(&new_blocks);
+        let old_by_rank: BTreeMap<(u8, usize), &Block> =
+            old_ranks.iter().copied().zip(&old_blocks).collect();
+        let mut matched = Vec::new();
+
+        let (merged, changed) = rewrite(&new_text, &new_blocks, |b| {
+            let rank = new_ranks[b.ordinal];
+            let old = old_by_rank.get(&rank)?;
+            matched.push(rank);
+            if is_empty(old) {
+                return None;
+            }
+            // Bloc rempli par `solve` : il suit le corrigé, nouvelle version comprise.
+            if old_reference.get(&(key.clone(), old.ordinal)) == Some(&old.body) {
+                return new_reference.get(&(key.clone(), b.ordinal)).cloned();
+            }
+            Some(old.body.clone())
+        });
+        for (rank, old) in &old_by_rank {
+            if !matched.contains(rank) && !is_empty(old) {
+                lost.push(format!(
+                    "{key} ligne {} (étape {}) : ce trou n'existe plus dans le corrigé",
+                    old.start + 1,
+                    old.step
+                ));
+            }
+        }
+        if changed > 0 {
+            fs::write(&path, merged).map_err(|e| e.to_string())?;
+            println!("  {key} : {changed} bloc(s) conservé(s)");
+            kept += changed;
+        }
+    }
+    for path in source_files(out) {
+        let key = relative(out, &path);
+        if staging.join(&key).exists() {
+            continue;
+        }
+        let text = fs::read_to_string(&path).map_err(|e| e.to_string())?;
+        if find_blocks(&text, REGION_BEGIN, REGION_END)
+            .iter()
+            .any(|b| !is_empty(b))
+        {
+            lost.push(format!("{key} : ce fichier n'existe plus dans le corrigé"));
+        }
+    }
+    // Un remplissage perdu en silence serait la pire issue : on s'arrête avant d'avoir
+    // touché au dossier de travail.
+    if !lost.is_empty() {
+        return Err(format!(
+            "mise à jour abandonnée, du travail serait perdu :\n  {}\nRecopiez-le \
+             ailleurs, rouvrez ces trous (`cargo xtask reset <n>` dans le dossier de \
+             travail), puis relancez.",
+            lost.join("\n  ")
+        ));
+    }
+
+    let step = current_step(out).unwrap_or(0);
+    set_default_feature(staging, step)?;
+
+    for entry in STARTER_ENTRIES.into_iter().chain([REFERENCE]) {
+        let (from, to) = (staging.join(entry), out.join(entry));
+        if to.is_dir() {
+            fs::remove_dir_all(&to).map_err(|e| format!("{} : {e}", to.display()))?;
+        } else if to.exists() {
+            fs::remove_file(&to).map_err(|e| format!("{} : {e}", to.display()))?;
+        }
+        if from.exists() {
+            fs::rename(&from, &to).map_err(|e| format!("{} : {e}", to.display()))?;
+        }
+    }
+
     let shown = out.strip_prefix(root).unwrap_or(out);
     println!(
-        "Dossier de travail créé : {} ({holes} trous à combler).\n",
+        "Dossier de travail mis à jour : {} ({holes} trous, {kept} rempli(s) conservé(s), \
+         étape {step}).",
         shown.display()
     );
-    println!("  cd {}", shown.display());
-    println!("  cargo test           # tests rouges : l'étape 0 vous attend");
-    println!("  cargo xtask status   # à tout moment, pour savoir où vous en êtes\n");
-    println!("Le déroulement d'une étape est expliqué dans ETAPES.md.");
     Ok(())
+}
+
+/// Pour chaque bloc, `(étape, rang parmi les blocs de cette étape)`, dans l'ordre des blocs.
+fn step_ranks(blocks: &[Block]) -> Vec<(u8, usize)> {
+    let mut seen: BTreeMap<u8, usize> = BTreeMap::new();
+    blocks
+        .iter()
+        .map(|b| {
+            let rank = seen.entry(b.step).or_insert(0);
+            *rank += 1;
+            (b.step, *rank - 1)
+        })
+        .collect()
 }
 
 /// Retire les blocs `CORRIGE_BEGIN`/`CORRIGE_END` d'un texte Markdown.

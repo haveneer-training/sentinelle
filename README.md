@@ -26,6 +26,10 @@ cargo xtask start      # crée travail/ (21 trous à combler)
 cd travail
 ```
 
+Pendant la mise au point, `cargo xtask update [--dir <chemin>]` reporte les modifications
+du corrigé dans un dossier de travail existant, en gardant les trous déjà remplis et l'étape
+courante (il refuse si un trou rempli disparaît du corrigé).
+
 `cargo xtask verify` contrôle les exercices courts (`exercices/m1` à `m3`) contre leurs
 corrigés. Le dossier `formateur/` (plan, scénario, corrigés, estimation) n'est jamais copié
 dans `travail/`.
@@ -54,7 +58,8 @@ cargo test
 Le déroulement des étapes est décrit dans [`ETAPES.md`](ETAPES.md), les formats des
 journaux dans [`docs/FORMATS.md`](docs/FORMATS.md).
 
-Le formateur vous fournira aussi un jeu de données « officiel » dont l'enquête est à résoudre.
+Le formateur vous fournira aussi un jeu de données « officiel » (≈ 800 Mo) dont l'enquête est à
+résoudre.
 Pour les mesures de performance, générez un jeu plus gros :
 
 ```shell
