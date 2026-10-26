@@ -354,6 +354,8 @@ pub fn bytes_by_user_hour<'a>(entries: &[WebEntry<'a>]) -> BTreeMap<(&'a str, Ti
     let mut volumes = BTreeMap::new();
     for entry in entries {
         if let (Some(user), Some(bytes)) = (entry.user, entry.bytes) {
+            // `div_euclid` arrondit vers -∞, `/` vers 0 : seul le premier convient avant
+            // 1970 (test `hours_before_1970_round_down`, étape 7)
             let hour = entry.timestamp.div_euclid(HOUR) * HOUR;
             *volumes.entry((user, hour)).or_insert(0) += bytes;
         }

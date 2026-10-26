@@ -28,6 +28,23 @@ fn sums_by_user_and_hour() {
 }
 
 #[test]
+fn hours_before_1970_round_down() {
+    // horodatage négatif : `/` arrondirait -1 s vers 0, l'heure suivante ; `div_euclid`
+    // le range bien dans l'heure qui commence à -3600 s
+    let lines = [
+        r#"10.1.0.1 - alice [1969-12-31T23:59:59Z] "GET / HTTP/1.1" 200 10 1"#,
+        r#"10.1.0.1 - alice [1970-01-01T00:00:00Z] "GET / HTTP/1.1" 200 1 1"#,
+    ];
+    let entries: Vec<_> = lines.iter().map(|l| parse_web_line(l).unwrap()).collect();
+    assert_eq!(entries[0].timestamp, -1);
+    let volumes = bytes_by_user_hour(&entries);
+    assert_eq!(
+        volumes,
+        BTreeMap::from([(("alice", -HOUR), 10), (("alice", 0), 1)])
+    );
+}
+
+#[test]
 fn range_queries_are_half_open() {
     let volumes = BTreeMap::from([
         (("a", 0), 1),
