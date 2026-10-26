@@ -17,7 +17,7 @@ Usage : sentinelle-gen [OPTIONS]
   --noise F         intensité du bruit de fond d'Internet     (défaut : 1.0)
   --malformed P     probabilité qu'une ligne soit corrompue   (défaut : 0.0005)
   --invalid-utf8    les lignes corrompues peuvent contenir de l'UTF-8 invalide
-  --reveal          écrit aussi GROUND_TRUTH.md (formateur uniquement)
+  --reveal          écrit aussi GROUND_TRUTH.md (la solution : à lire après l'enquête)
 
 Ordres de grandeur sur 7 jours : 150 salariés ≈ 9 Mo ; --users 2000 --noise 10 ≈ 100 Mo.";
 

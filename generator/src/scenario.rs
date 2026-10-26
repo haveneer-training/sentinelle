@@ -243,7 +243,10 @@ impl Scenario {
         let db = HOSTS[CLIENT_DB].name;
         let mut r = String::new();
         let _ = writeln!(r, "# Vérité terrain — graine {seed}\n");
-        let _ = writeln!(r, "Document formateur : ne pas distribuer.\n");
+        let _ = writeln!(
+            r,
+            "La solution de l'enquête, donnée comme référence : ne l'ouvrez qu'après avoir mené\nla vôtre. La lire avant, c'est tricher, et surtout vous priver de l'exercice.\n"
+        );
         let _ = writeln!(r, "| Étape | Début | Fin | Détails |\n|---|---|---|---|");
         let _ = writeln!(
             r,

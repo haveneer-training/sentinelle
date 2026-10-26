@@ -1,6 +1,7 @@
 # Sentinelle — plan formateur
 
-Document formateur : retirer `solutions/` avant de distribuer le dépôt.
+Les stagiaires reçoivent tout le dépôt, `solutions/` compris : les corrigés sont une
+référence, à consulter après avoir cherché, jamais avant.
 
 Formation « Langage Rust — intermédiaire » (Ascent Formation, 5 jours, 35 h).
 Sentinelle sert de fil rouge à tous les blocs de TP. Les « Exemple TP » du programme
