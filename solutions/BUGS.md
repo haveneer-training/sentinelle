@@ -2,7 +2,7 @@
 
 Reproductions vérifiées avec les jeux par défaut (graine 42).
 
-| Ticket | Commande | Symptôme | Cause | Correction |
+| Ticket | Commande (`sentinelle-turbo …`) | Symptôme | Cause | Correction |
 |---|---|---|---|---|
 | 1 | `report data-propre` (`--malformed 0`) | debug : `attempt to add with overflow` (`report.rs:22`) ; release : 0 alerte | volumes en `u32` : 5,5 Go reboucle à ~1,2 Go, sous le seuil de 2 Go | `u64` partout (`BTreeMap<_, u64>`, plus de `as u32`) ; mentionner `checked_add`, `overflow-checks = true` en release |
 | 2 | `report data` | `end byte index 34 is out of bounds for string of length 24` (`report.rs:17`) | `&line[open + 1..open + 14]` sur une ligne tronquée juste après `[` | `line.get(open + 1..open + 14)` + `continue` ; point d'arrêt conditionnel : `break report.rs:17 if line.length < open + 14` (gdb) pour afficher la ligne |

@@ -21,7 +21,7 @@ rust-lldb -- target/debug/sentinelle-turbo report data        # macOS
 | pile d'appels | `bt` | `bt` |
 | remonter dans la pile | `frame 5` | `frame select 5` |
 | variables locales | `info locals` | `frame variable` |
-| afficher une valeur | `print line` | `p line` |
+| afficher une valeur | `print line` | `v line` (`frame variable line`) |
 | point d'arrêt à une ligne | `break report.rs:17` | `b report.rs:17` |
 | … sous condition | `break report.rs:17 if open > 30` | `b report.rs:17 -c 'open > 30'` |
 | continuer | `continue` | `continue` |
@@ -29,6 +29,13 @@ rust-lldb -- target/debug/sentinelle-turbo report data        # macOS
 Les scripts `rust-gdb` / `rust-lldb` chargent des afficheurs adaptés : `String`, `Vec`,
 `HashMap`, `Option` s'affichent lisiblement. Hors débogueur, `RUST_BACKTRACE=1` donne la
 pile d'une panique, et `dbg!(expr)` affiche une valeur avec son emplacement.
+
+L'arrêt sur `rust_panic` se fait dans la bibliothèque standard, livrée compilée avec
+optimisations : d'où l'avertissement « compiled with optimization », qui ne concerne pas
+votre code. `bt`, puis remontez la pile jusqu'à la première trame `sentinelle_turbo::…`.
+Sous macOS, lldb n'a pas de support natif de Rust (« no plugin for the language rust ») :
+il lit les variables mais n'évalue pas d'expression Rust. Préférez `v` / `frame variable`
+à `p`, et n'appelez pas de méthode (`line.len()`) depuis le débogueur.
 
 ### Ticket 1 — « Aucune alerte en release, plantage en debug »
 
