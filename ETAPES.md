@@ -79,12 +79,18 @@ Un `todo!()` rend inutilisés les paramètres de sa fonction et certains imports
 | [9](docs/etapes/etape-09.md) | Pipeline de threads | Concurrence | `mpsc::sync_channel`, `Mutex<Receiver>`, fermeture des canaux | `BufRead` |
 | [10](docs/etapes/etape-10.md) | *Bonus* : partager plutôt que fusionner | Concurrence | `thread::spawn`, `Arc<Mutex<_>>`, atomiques | mesures d'échelle |
 
+Les étapes s'arrêtent au module 3, et c'est voulu : elles **ajoutent** du code (lecture,
+détections, threads). Les modules 4 à 6 travaillent sur du code **qui existe déjà** :
+on refactorise et documente `legacy/` (4), on mesure et optimise la v0.1 et le fil rouge
+terminé (5), on débogue `sentinelle-turbo` (6). Le fil rouge doit donc être complet à la
+fin du module 3 ; sinon, `cargo xtask goto 10 && cargo xtask solve 10` le termine.
+
 ## Autour du fil rouge
 
 Chaque module a sa fiche dans [`docs/modules/`](docs/modules/) : ce qui se fait en cours,
-en TP, et avec quel support.
+en TP, et avec quel support. Pour les modules 4 à 6, la fiche est l'énoncé du TP.
 
-| Module | Hors fil rouge |
+| Module | Hors fil rouge (modules 1 à 3) ou TP (modules 4 à 6) |
 |---|---|
 | 1. Références | `exercices/m1` : neuf erreurs classiques du vérificateur d'emprunts ; lecture critique de `legacy/` |
 | 2. Collections | `exercices/m2` : manipuler un vecteur ; optimiser les collections de `legacy/` |
