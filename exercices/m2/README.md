@@ -2,7 +2,7 @@
 
 | Exercice | Notions | Durée |
 |---|---|---|
-| `ex01_vec_failures` | `push`, `insert`, `binary_search`, `retain`/`drain`, `dedup`, tranches, `windows` | 20 à 30 min |
+| `ex01_vec_failures` | `push`, `insert`, `binary_search`, `retain`/`drain` (rappel de m1/ex04), `dedup`, tranches, `windows` | 20 à 30 min |
 
 ```shell
 cargo run -p sentinelle-m2 --example ex01_vec_failures

@@ -16,6 +16,10 @@ fn forget_before(failures: &mut Vec<i64>, limit: i64) {
     failures.drain(..keep_from);
 }
 
+fn forget_scanners(ips: &mut Vec<&str>, scanners: &[&str]) {
+    ips.retain(|ip| !scanners.contains(ip));
+}
+
 fn deduplicate(failures: &mut Vec<i64>) {
     failures.dedup();
 }
@@ -43,5 +47,8 @@ fn main() {
     forget_before(&mut failures, 105);
     assert_eq!(failures, [105, 110, 140]);
     assert_eq!(shortest_gap(&failures[..1]), None);
+    let mut ips = vec!["198.51.100.227", "100.64.1.2", "203.0.113.72", "192.0.2.67"];
+    forget_scanners(&mut ips, &["100.64.1.2", "192.0.2.67"]);
+    assert_eq!(ips, ["198.51.100.227", "203.0.113.72"]);
     println!("m2/ex01 : OK");
 }

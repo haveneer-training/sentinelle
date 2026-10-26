@@ -15,7 +15,7 @@ cargo run -p sentinelle-m1 --example ex01_mutable_aliasing
 | 1 | `ex01_mutable_aliasing` | E0502 | emprunt partagé puis mutation | cours, Exemple TP 1 |
 | 2 | `ex02_reused_buffer` | E0502 | tampon réutilisé, posséder ou emprunter | cours, Exemple TP 1 |
 | 3 | `ex03_two_mutable_borrows` | E0499 | exclusivité de `&mut`, `get_disjoint_mut` | cours, Exemple TP 1 |
-| 4 | `ex04_iterate_and_mutate` | E0502 | modifier pendant un parcours, `retain` | cours, Exemple TP 1 |
+| 4 | `ex04_iterate_and_mutate` | E0502 | modifier pendant un parcours (repris en m2/ex01) | cours, Exemple TP 1 |
 | 5 | `ex05_return_local_reference` | E0515 | renvoyer une référence vers une locale | cours, Exemple TP 2 |
 | 6 | `ex06_lifetime_annotations` | E0106 | annoter une fonction, durées de vie distinctes | cours, Exemple TP 2 |
 | 7 | `ex07_struct_outlives_data` | E0597 | structure qui emprunte | TP, bugs dans un projet |

@@ -2,8 +2,8 @@
 //! Erreur attendue : E0502
 //!
 //! On veut retirer les entrées des scanners connus. En C++, effacer pendant un parcours
-//! invalide l'itérateur ; ici, le compilateur refuse. Corrigez avec la méthode prévue
-//! pour cela, en une ligne.
+//! invalide l'itérateur ; ici, le compilateur refuse. Expliquez pourquoi, puis corrigez :
+//! aucun emprunt de `ips` ne doit être vivant au moment où on le modifie.
 
 fn main() {
     let scanners = ["100.64.1.2", "192.0.2.67"];
