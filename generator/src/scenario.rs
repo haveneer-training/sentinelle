@@ -129,13 +129,16 @@ pub fn play(w: &World, rng: &mut Rng, mut botnet: Option<&mut Rng>) -> (Scenario
     // Jour 2 (mercredi soir) : force brute sur la victime, puis succès
     let brute_start = w.midnight(2) + 22 * HOUR + rng.range(0, 30 * MINUTE);
     let failures = rng.range(350, 450) as u32;
-    // (adresse, échecs) de chaque bot
-    let mut bots: Vec<(Ipv4Addr, u32)> = match botnet.as_deref_mut() {
-        Some(bot_rng) => (0..bot_rng.range(80, 120))
-            .map(|_| (internet_ip(bot_rng, &[spray_ip, brute_ip]), 0))
-            .collect(),
-        None => Vec::new(),
-    };
+    // (adresse, échecs) de chaque bot, à des adresses toutes distinctes
+    let mut bots: Vec<(Ipv4Addr, u32)> = Vec::new();
+    if let Some(bot_rng) = botnet.as_deref_mut() {
+        let mut taken = vec![spray_ip, brute_ip];
+        for _ in 0..bot_rng.range(80, 120) {
+            let ip = internet_ip(bot_rng, &taken);
+            taken.push(ip);
+            bots.push((ip, 0));
+        }
+    }
     let mut ts = brute_start;
     let mut pid = crate::events::pid(rng);
     let mut port = port(rng);
@@ -404,6 +407,8 @@ mod tests {
         let tries: u32 = s.bots.iter().map(|&(_, tries)| tries).sum();
         assert_eq!(tries, s.brute.2);
         assert!(s.bots.len() >= 80);
+        let distinct: std::collections::HashSet<_> = s.bots.iter().map(|&(ip, _)| ip).collect();
+        assert_eq!(distinct.len(), s.bots.len());
         // loin du seuil de force brute par adresse (20 en 5 min)
         assert!(s.max_bot_failures() <= 6);
         let failures = format!("Failed password for {victim} from ");
