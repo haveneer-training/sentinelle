@@ -74,3 +74,40 @@ façon ne passe pas à cette taille (coût quadratique, D4).
 | défaut (150 salariés) | 9 Mo | 0,2 s |
 | `--users 2000 --noise 10` | 100 Mo | 12,8 s |
 | `--users 20000 --noise 50` | 830 Mo | inutilisable |
+
+### Lire la sortie de `sentinelle`
+
+Sur le jeu officiel, la chronologie compte des milliers d'alertes. Pour retrouver le
+scénario sans connaître la réponse, on ne garde que les types d'alertes rares :
+
+```shell
+cargo run --release -q -p sentinelle -- data-officiel 2>/dev/null \
+  | grep -E 'password spraying|force brute|COMPROMISSION|volume anormal'
+```
+
+Il reste une poignée de lignes : la force brute, puis la `COMPROMISSION` depuis la même
+adresse quelques secondes après la dernière tentative, et le `volume anormal`. Le compte de
+la victime y apparaît. On le suit ensuite dans la sortie complète
+(`grep <compte>`) : rebonds vers `srv-web-01` puis `srv-db-02` (« accès inédit »),
+`pg_dump` (« sudo inhabituel »). Avec `--injection`, deux fausses `COMPROMISSION root`
+depuis `192.0.2.77` passent aussi le filtre : c'est le piège du bonus.
+
+Les heures de `srv-db-02` sont décalées de la dérive d'horloge indiquée dans
+`GROUND_TRUTH.md` : celui-ci donne les heures réelles, `sentinelle` celles écrites dans le
+journal.
+
+**Le bruit des « accès inédits ».** Un couple (compte, serveur) jamais vu pendant les deux
+jours d'apprentissage (`Config::starting_at`) déclenche une alerte. Sur le jeu par défaut
+(150 salariés), c'est une trentaine d'alertes. Sur le jeu officiel (20 000 salariés), deux
+jours ne suffisent pas à voir les habitudes de chacun : environ 3 800 alertes, qui
+décroissent de jour en jour (≈ 2 200 le mercredi, 1 000 le jeudi, 500 le vendredi) à mesure
+que les couples sont appris. Les rebonds de l'attaquant y sont noyés. Bon point de
+discussion : une détection juste sur un petit jeu devient inexploitable à l'échelle si ses
+alertes ne sont pas hiérarchisées (période d'apprentissage proportionnée au volume, score de
+rareté, corrélation avec une compromission déjà détectée).
+
+Les « sudo inhabituel » (environ 340 sur le jeu officiel) sont d'une autre nature : des
+commandes d'administration courantes (`systemctl status`, `df -h`, `journalctl`…) lancées
+par des comptes qui n'en avaient pas lancé pendant l'apprentissage. Rares, elles méritent
+un coup d'œil, sans plus : c'est la commande qui alerte (un `pg_dump` de la base clients),
+pas le seul fait qu'un `sudo` soit nouveau.
