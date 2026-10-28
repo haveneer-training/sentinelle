@@ -32,6 +32,11 @@ cargo test --test step8_scoped_threads
 cargo run --release -p sentinelle -- data --threads 4
 ```
 
+`--threads` ne fait que **refaire** le résumé, en parallèle, une fois l'analyse terminée :
+le temps total ne baisse pas, il augmente un peu. Comparez la ligne `résumé sur N threads`
+(sur la sortie d'erreur) pour plusieurs valeurs de N. Paralléliser le reste de l'analyse :
+voir « Pour aller plus loin » à l'[étape 10](etape-10.md).
+
 ## Diapositives
 
 « spawn exige move, scope autorise l'emprunt », « Lancer un thread : spawn et join »,

@@ -42,6 +42,39 @@ limite (loi d'Amdahl : la lecture, la fusion) ?
   chaque ligne, l'agrégateur l'enrichit. Pourquoi `RwLock` plutôt que `Mutex` ici ?
 - Dans `main`, analysez `auth.log` et `access.log` dans deux threads.
 
+## Pour aller plus loin : paralléliser toute la Sentinelle
+
+Les étapes 8 à 10 ne parallélisent que le résumé, un calcul à côté de l'analyse. Sur un
+jeu de 800 Mo (`--users 20000 --noise 50`, 10 cœurs), le temps de `sentinelle` se répartit
+à peu près ainsi : analyse syntaxique 50 % (surtout `access.log`), `bytes_by_user_hour`
+45 %, détections 5 %, lecture des fichiers quelques pour cent. Le faire complètement
+demanderait de traiter, ensemble :
+
+- **L'analyse syntaxique** : chaque ligne est indépendante. `split_chunks`, un thread par
+  morceau, puis concaténation des `Vec` **dans l'ordre des morceaux**, car les détections
+  supposent les entrées dans l'ordre du journal. Les numéros de ligne des erreurs sont à
+  décaler de ceux des morceaux précédents.
+- **Les agrégats** (`bytes_by_user_hour`, `failures_by_ip`) : un agrégat partiel par
+  morceau puis une fusion, comme `Summary::merge`. Ici, une `HashMap` cumulée puis
+  convertie une seule fois en `BTreeMap` gagnerait déjà beaucoup, sans aucun thread :
+  mesurer avant de paralléliser.
+- **Les détections** : indépendantes les unes des autres, donc une par thread. À
+  l'intérieur d'une détection, les fenêtres glissantes suivent le temps ; on ne peut les
+  répartir que par clé (adresse, compte), chaque thread voyant toutes les entrées de ses
+  clés, dans l'ordre. Peu de gain pour beaucoup de complexité.
+- **La cohérence** : la sortie doit rester identique à la version séquentielle, quel que
+  soit le nombre de threads. Un test qui compare les deux sur des jeux générés (comme
+  `parallel_summary_equals_sequential` à l'étape 8), et un ordre de sortie qui ne dépend
+  ni de l'ordre d'arrivée des threads ni de celui d'une `HashMap`.
+- **La mémoire** : les entrées empruntent le texte, d'où `thread::scope` et le texte
+  entier en mémoire. Un pipeline (étape 9) imposerait des entrées possédées (`String`),
+  donc des allocations par ligne, à rebours du module 5.
+- **Ce qui reste séquentiel** (loi d'Amdahl) : la lecture, les concaténations, les
+  fusions, le tri de la chronologie. Ordre de grandeur attendu : de 6 s à 1,5 s environ.
+
+C'est le travail que fait la crate `rayon` (`par_chunks`, `par_iter().fold(..).reduce(..)`) ;
+ce dépôt s'en passe pour rester sans dépendance externe.
+
 ## Diapositives
 
 « Et avec spawn ? Arc, Send et Sync », « Ce que coûte la synchronisation », « RwLock :
