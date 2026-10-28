@@ -80,10 +80,13 @@ pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
     targets.extend(FAKE_ACCOUNTS);
     rng.shuffle(&mut targets);
     let mut ts = spray_start;
+    // instant du dernier essai écrit : `ts` a déjà avancé d'un pas en fin de boucle
+    let mut spray_last = ts;
     for &login in &targets {
         let port = port(rng);
         let pid = Some(crate::events::pid(rng));
         if FAKE_ACCOUNTS.contains(&login) {
+            spray_last = ts + 2;
             b.auth(
                 w,
                 ts,
@@ -103,6 +106,7 @@ pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
                 ),
             );
         } else {
+            spray_last = ts;
             b.auth(
                 w,
                 ts,
@@ -114,7 +118,7 @@ pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
         }
         ts += rng.range(25, 70);
     }
-    let spray = (spray_start, ts, targets.len());
+    let spray = (spray_start, spray_last, targets.len());
 
     // Jour 2 (mercredi soir) : force brute sur la victime, puis succès
     let brute_start = w.midnight(2) + 22 * HOUR + rng.range(0, 30 * MINUTE);
@@ -122,7 +126,9 @@ pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
     let mut ts = brute_start;
     let mut pid = crate::events::pid(rng);
     let mut port = port(rng);
+    let mut brute_last = ts;
     for i in 1..=failures {
+        brute_last = ts;
         b.auth(
             w,
             ts,
@@ -141,7 +147,7 @@ pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
         }
         ts += rng.range(1, 4);
     }
-    let brute = (brute_start, ts, failures);
+    let brute = (brute_start, brute_last, failures);
     let compromise = ts + rng.range(2, 6);
     let session = rng.range(HOUR, 2 * HOUR);
     ssh_session(

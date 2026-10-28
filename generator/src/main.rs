@@ -75,7 +75,9 @@ fn run(args: &Args) -> std::io::Result<()> {
             .scenario
             .report(&generated.world, args.options.seed);
         report.push_str(&format!(
-            "\nLignes corrompues : {} / {} dans auth.log, {} / {} dans access.log.\n",
+            "\nLignes corrompues : {} / {} dans auth.log, {} / {} dans access.log. Certaines \
+             restent lisibles (un champ final disparu, par exemple) : un analyseur en rejette \
+             au plus autant.\n",
             generated.auth.corrupted,
             generated.auth.lines,
             generated.access.corrupted,
