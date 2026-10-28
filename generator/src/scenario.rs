@@ -4,7 +4,7 @@
 //! lire ce code ne donne pas la solution d'un jeu de données généré avec une graine inconnue.
 
 use crate::clock::{HOUR, Iso, MINUTE};
-use crate::events::{Batch, port, ssh_session, sudo};
+use crate::events::{Batch, internet_ip, port, ssh_session, sudo};
 use crate::rng::Rng;
 use crate::world::{BASTION, CLIENT_DB, HOSTS, WEB_FRONT, World};
 use std::fmt::Write;
@@ -36,6 +36,9 @@ pub struct Scenario {
     pub victim: usize,
     pub spray: (i64, i64, usize),
     pub brute: (i64, i64, u32),
+    /// Option `--distributed` : les bots qui mènent la force brute, avec leur nombre
+    /// d'échecs (vide sans l'option).
+    pub bots: Vec<(Ipv4Addr, u32)>,
     pub compromise: i64,
     pub pivot_web: i64,
     pub pivot_db: i64,
@@ -43,7 +46,10 @@ pub struct Scenario {
     pub exfil: (i64, i64, u32, u64),
 }
 
-pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
+/// `botnet` (option `--distributed`) : flux à part qui répartit la force brute entre de
+/// nombreuses adresses. Le flux principal est consommé à l'identique : le reste du scénario
+/// ne change pas.
+pub fn play(w: &World, rng: &mut Rng, mut botnet: Option<&mut Rng>) -> (Scenario, Batch) {
     assert!(
         w.days >= MIN_DAYS,
         "le scénario demande au moins {MIN_DAYS} jours"
@@ -123,25 +129,58 @@ pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
     // Jour 2 (mercredi soir) : force brute sur la victime, puis succès
     let brute_start = w.midnight(2) + 22 * HOUR + rng.range(0, 30 * MINUTE);
     let failures = rng.range(350, 450) as u32;
+    // (adresse, échecs) de chaque bot
+    let mut bots: Vec<(Ipv4Addr, u32)> = match botnet.as_deref_mut() {
+        Some(bot_rng) => (0..bot_rng.range(80, 120))
+            .map(|_| (internet_ip(bot_rng, &[spray_ip, brute_ip]), 0))
+            .collect(),
+        None => Vec::new(),
+    };
     let mut ts = brute_start;
     let mut pid = crate::events::pid(rng);
     let mut port = port(rng);
     let mut brute_last = ts;
     for i in 1..=failures {
         brute_last = ts;
-        b.auth(
-            w,
-            ts,
-            BASTION,
-            "sshd",
-            Some(pid),
-            format_args!(
-                "Failed password for {} from {brute_ip} port {port} ssh2",
-                v.name
-            ),
-        );
+        if let Some(bot_rng) = botnet.as_deref_mut() {
+            // chaque essai vient d'un bot pris au hasard, sur une connexion à lui
+            // tour à tour, dans un ordre rebattu à chaque tour : au plus
+            // ⌈450 / 80⌉ = 6 essais par bot, espacés de plusieurs minutes
+            let round = (i as usize - 1) % bots.len();
+            if round == 0 {
+                bot_rng.shuffle(&mut bots);
+            }
+            let (bot, tries) = &mut bots[round];
+            *tries += 1;
+            let (bot_pid, bot_port) = (crate::events::pid(bot_rng), crate::events::port(bot_rng));
+            b.auth(
+                w,
+                ts,
+                BASTION,
+                "sshd",
+                Some(bot_pid),
+                format_args!(
+                    "Failed password for {} from {bot} port {bot_port} ssh2",
+                    v.name
+                ),
+            );
+        } else {
+            b.auth(
+                w,
+                ts,
+                BASTION,
+                "sshd",
+                Some(pid),
+                format_args!(
+                    "Failed password for {} from {brute_ip} port {port} ssh2",
+                    v.name
+                ),
+            );
+        }
         if i % 6 == 0 {
-            b.auth(w, ts, BASTION, "sshd", Some(pid), format_args!("error: maximum authentication attempts exceeded for {} from {brute_ip} port {port} ssh2 [preauth]", v.name));
+            if botnet.is_none() {
+                b.auth(w, ts, BASTION, "sshd", Some(pid), format_args!("error: maximum authentication attempts exceeded for {} from {brute_ip} port {port} ssh2 [preauth]", v.name));
+            }
             pid += rng.range(1, 40) as u32;
             port += rng.range(1, 9) as u16;
         }
@@ -234,6 +273,7 @@ pub fn play(w: &World, rng: &mut Rng) -> (Scenario, Batch) {
         victim,
         spray,
         brute,
+        bots,
         compromise,
         pivot_web,
         pivot_db,
@@ -263,14 +303,26 @@ impl Scenario {
             self.spray.2,
             FAKE_ACCOUNTS.len()
         );
-        let _ = writeln!(
-            r,
-            "| Force brute | {} | {} | `{}` → `{v}`@bastion-01, {} échecs |",
-            Iso(self.brute.0),
-            Iso(self.brute.1),
-            self.brute_ip,
-            self.brute.2
-        );
+        if self.bots.is_empty() {
+            let _ = writeln!(
+                r,
+                "| Force brute | {} | {} | `{}` → `{v}`@bastion-01, {} échecs |",
+                Iso(self.brute.0),
+                Iso(self.brute.1),
+                self.brute_ip,
+                self.brute.2
+            );
+        } else {
+            let _ = writeln!(
+                r,
+                "| Force brute distribuée | {} | {} | {} adresses → `{v}`@bastion-01, {} échecs (au plus {} par adresse) |",
+                Iso(self.brute.0),
+                Iso(self.brute.1),
+                self.bots.len(),
+                self.brute.2,
+                self.max_bot_failures()
+            );
+        }
         let _ = writeln!(
             r,
             "| Compromission | {} | | `Accepted password for {v} from {}` |",
@@ -306,6 +358,72 @@ impl Scenario {
             "\nHeures réelles (UTC). L'horloge de {db} dérive de {} s : ses lignes affichent une heure décalée.",
             w.clock_offsets[CLIENT_DB]
         );
+        if !self.bots.is_empty() {
+            let _ = writeln!(
+                r,
+                "\n## Bonus : force brute distribuée (`--distributed`)\n\n\
+                 Les {} échecs sur `{v}` viennent de {} adresses, au plus {} chacune : aucune \
+                 ne franchit les seuils par adresse (force brute, spraying, compromission). La \
+                 connexion réussie vient de `{}`, qui n'a jamais échoué ; c'est aussi \
+                 l'adresse de l'exfiltration.",
+                self.brute.2,
+                self.bots.len(),
+                self.max_bot_failures(),
+                self.brute_ip
+            );
+        }
         r
+    }
+
+    /// Le plus grand nombre d'échecs d'un même bot (0 sans `--distributed`).
+    pub fn max_bot_failures(&self) -> u32 {
+        self.bots.iter().map(|&(_, tries)| tries).max().unwrap_or(0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Dataset, Options};
+
+    fn dataset(distributed: bool) -> Dataset {
+        Dataset::generate(&Options {
+            seed: 3,
+            users: 40,
+            noise: 0.3,
+            distributed,
+            ..Options::default()
+        })
+    }
+
+    #[test]
+    fn a_distributed_brute_force_stays_under_the_per_address_thresholds() {
+        let data = dataset(true);
+        let text = String::from_utf8(data.auth).unwrap();
+        let s = &data.generated.scenario;
+        let victim = &data.generated.world.users[s.victim].name;
+        let tries: u32 = s.bots.iter().map(|&(_, tries)| tries).sum();
+        assert_eq!(tries, s.brute.2);
+        assert!(s.bots.len() >= 80);
+        // loin du seuil de force brute par adresse (20 en 5 min)
+        assert!(s.max_bot_failures() <= 6);
+        let failures = format!("Failed password for {victim} from ");
+        assert!(text.matches(&failures).count() >= s.brute.2 as usize);
+        // l'adresse de l'attaquant n'échoue jamais, mais se connecte
+        let attacker = format!("from {} port", s.brute_ip);
+        let attacker: Vec<&str> = text.lines().filter(|l| l.contains(&attacker)).collect();
+        assert!(attacker.iter().all(|l| !l.contains("Failed")));
+        assert!(attacker.iter().any(|l| l.contains("Accepted")));
+    }
+
+    #[test]
+    fn the_rest_of_the_scenario_does_not_change() {
+        let (plain, with) = (dataset(false), dataset(true));
+        let (p, w) = (&plain.generated.scenario, &with.generated.scenario);
+        assert!(p.bots.is_empty());
+        assert_eq!(p.max_bot_failures(), 0);
+        assert_eq!(
+            (p.brute, p.compromise, p.dump, p.exfil),
+            (w.brute, w.compromise, w.dump, w.exfil)
+        );
     }
 }

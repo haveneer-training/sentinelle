@@ -15,6 +15,7 @@ solutions pour engendrer `travail/`. Ce dossier contient tout le reste.
 | `m5/` | mesures de référence, `parse_auth_event` sans allocation, hachage FNV |
 | `BUGS.md` | causes et corrections des tickets du module 6 |
 | `bonus-injection/` | bonus du module 1 (`--injection`) : enquête, détections des noms suspects et des connexions fantômes, correction à la source |
+| `bonus-distributed/` | bonus du module 2 (`--distributed`) : enquête, force brute et compromission par compte |
 | `m6-turbo-fixed/` | `bugs/` corrigé, un test par ticket ; `scripts/check-bugs.sh` vérifie en plus que `bugs/` présente toujours chaque symptôme |
 
 ## Les défauts de la v0.1 (`legacy/src/main.rs`)
@@ -90,7 +91,9 @@ adresse quelques secondes après la dernière tentative, et le `volume anormal`.
 la victime y apparaît. On le suit ensuite dans la sortie complète
 (`grep <compte>`) : rebonds vers `srv-web-01` puis `srv-db-02` (« accès inédit »),
 `pg_dump` (« sudo inhabituel »). Avec `--injection`, deux fausses `COMPROMISSION root`
-depuis `192.0.2.77` passent aussi le filtre : c'est le piège du bonus.
+depuis `192.0.2.77` passent aussi le filtre : c'est le piège du bonus. Avec `--distributed`,
+ni force brute ni `COMPROMISSION` : seul le `volume anormal` reste, et l'on remonte du
+compte (voir [`bonus-distributed/`](bonus-distributed/README.md)).
 
 Les heures de `srv-db-02` sont décalées de la dérive d'horloge indiquée dans
 `GROUND_TRUTH.md` : celui-ci donne les heures réelles, `sentinelle` celles écrites dans le

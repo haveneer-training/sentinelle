@@ -6,6 +6,7 @@
 | | Exemple TP 2 : `HashMap` pour des paires clé/valeur | étape 4 du fil rouge |
 | TP (4 h) | cas réels : les détections | étapes 5 à 7, 2 h 05 à 2 h 50 |
 | | optimisation des collections dans un projet donné | ci-dessous, 45 min à 1 h |
+| | *bonus* : une force brute distribuée (détections par compte) | [`docs/bonus/distributed.md`](../bonus/distributed.md), 45 à 75 min |
 
 ## Optimiser les collections de la v0.1 (45 min à 1 h)
 

@@ -18,6 +18,7 @@ Usage : sentinelle-gen [OPTIONS]
   --malformed P     probabilité qu'une ligne soit corrompue   (défaut : 0.0005)
   --invalid-utf8    les lignes corrompues peuvent contenir de l'UTF-8 invalide
   --injection       bonus : noms de compte piégés (docs/bonus/injection.md)
+  --distributed     bonus : force brute distribuée (docs/bonus/distributed.md)
   --reveal          écrit aussi GROUND_TRUTH.md (la solution : à lire après l'enquête)
 
 Ordres de grandeur sur 7 jours : 150 salariés ≈ 9 Mo ; --users 2000 --noise 10 ≈ 100 Mo.";
@@ -48,6 +49,7 @@ fn parse_args() -> Result<Args, String> {
             "--malformed" => opts.malformed = value()?.parse().map_err(|e| bad(&e))?,
             "--invalid-utf8" => opts.invalid_utf8 = true,
             "--injection" => opts.injection = true,
+            "--distributed" => opts.distributed = true,
             "--reveal" => parsed.reveal = true,
             "-h" | "--help" => return Err(USAGE.to_string()),
             _ => return Err(format!("option inconnue : {arg}\n\n{USAGE}")),

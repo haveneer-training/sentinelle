@@ -87,7 +87,9 @@ terminé (5), on débogue `sentinelle-turbo` (6). Le fil rouge doit donc être c
 fin du module 3 ; sinon, `cargo xtask goto 10 && cargo xtask solve 10` le termine.
 
 Hors étapes, un bonus du module 1 : [des noms de compte piégés](docs/bonus/injection.md)
-(`sentinelle-gen --injection`), quand Sentinelle sait analyser `auth.log`.
+(`sentinelle-gen --injection`), quand Sentinelle sait analyser `auth.log` ; et un bonus du
+module 2 : [une force brute distribuée](docs/bonus/distributed.md)
+(`sentinelle-gen --distributed`), après l'étape 6.
 
 ## Autour du fil rouge
 

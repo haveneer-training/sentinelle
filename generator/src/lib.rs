@@ -29,6 +29,8 @@ pub struct Options {
     pub invalid_utf8: bool,
     /// Bonus : noms de compte piégés (saut de ligne, homoglyphes, caractères invisibles).
     pub injection: bool,
+    /// Bonus : force brute répartie entre les adresses d'un botnet.
+    pub distributed: bool,
 }
 
 impl Default for Options {
@@ -41,6 +43,7 @@ impl Default for Options {
             malformed: 0.0005,
             invalid_utf8: false,
             injection: false,
+            distributed: false,
         }
     }
 }
@@ -69,12 +72,16 @@ pub fn generate(opts: &Options, auth: impl Write, access: impl Write) -> io::Res
     );
     let mut rng = Rng::new(opts.seed);
     let world = World::new(&mut rng.fork(), opts.users, opts.days);
-    let (scenario, attack) = scenario::play(&world, &mut rng.fork());
-    // flux à part, dérivé de la graine : sans l'option, les journaux ne changent pas
+    // flux à part, dérivés de la graine : sans les options, les journaux ne changent pas
+    let mut botnet = opts
+        .distributed
+        .then(|| Rng::new(opts.seed ^ 0xB07B_07D1_57B0_B07E));
+    let (scenario, attack) = scenario::play(&world, &mut rng.fork(), botnet.as_mut());
     let injection = opts
         .injection
         .then(|| injection::play(&world, &mut Rng::new(opts.seed ^ 0x1A7E_C7ED_0BAD_F00D)));
     let mut excluded = vec![scenario.spray_ip, scenario.brute_ip];
+    excluded.extend(scenario.bots.iter().map(|&(ip, _)| ip));
     excluded.extend(injection.as_ref().map(|(i, _)| i.ip));
 
     // répartit les lignes du scénario par jour
