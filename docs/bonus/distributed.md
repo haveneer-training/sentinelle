@@ -48,9 +48,9 @@ où l'attaquant est-il entré ?
   incrémente à l'entrée, on décrémente à la sortie, on retire l'adresse quand son compte
   tombe à zéro : `len()` donne alors le nombre d'adresses distinctes.
 - Le bruit d'Internet essaie sans cesse `root`, `admin`, `pi`… depuis des centaines
-  d'adresses. `AuthEvent::Failed` a un champ `invalid_user` : un compte qui n'existe pas
-  ne mènera à aucune connexion.
-- Un motif peut fixer un champ : `let AuthEvent::Failed { user, ip, invalid_user: false } = …`.
+  d'adresses. `AuthEvent::Failed` a un champ `invalid_user`, mais `root` existe. Quels
+  comptes méritent d'être surveillés ? Ceux qui servent : un premier passage sur le
+  journal peut les repérer.
 
 ## Vérifier
 

@@ -43,6 +43,8 @@ jobs:
           --all-targets --all-features -- -D warnings
       - name: cargo test (corrigé, test de caractérisation de legacy/)
         run: cargo test --workspace --exclude sentinelle-m1
+      - name: cargo test (corrigés des bonus, solutions/bonus-*)
+        run: cargo test -p sentinelle --features bonus --lib bonus
       - name: cargo bench --no-run (perf/)
         run: cargo bench --no-run -p sentinelle-perf
       - name: refactorisation de référence (solutions/m4-legacy-refactored)

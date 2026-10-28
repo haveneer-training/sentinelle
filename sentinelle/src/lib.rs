@@ -21,4 +21,13 @@ pub mod summary;
 pub mod time;
 pub mod web;
 
+// Corrigés des bonus, lus seulement avec la feature : sans elle, les fichiers peuvent
+// manquer (dossier de travail).
+#[cfg(feature = "bonus")]
+#[path = "../../solutions/bonus-distributed/detect_distributed.rs"]
+pub mod bonus_distributed;
+#[cfg(feature = "bonus")]
+#[path = "../../solutions/bonus-injection/detect_injection.rs"]
+pub mod bonus_injection;
+
 pub use error::ParseError;

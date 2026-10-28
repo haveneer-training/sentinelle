@@ -1,8 +1,9 @@
 // Bonus « noms de compte piégés » : étapes 3 et 4 de docs/bonus/injection.md.
-// À ajouter à `sentinelle/src/detect.rs` (ou dans un module à part).
+// À ajouter à `sentinelle/src/detect.rs` (ou dans un module à part). Compilé et testé
+// dans le corrigé par `cargo test -p sentinelle --features bonus`.
 
-use sentinelle::auth::{AuthEntry, AuthEvent};
-use sentinelle::time::Timestamp;
+use crate::auth::{AuthEntry, AuthEvent};
+use crate::time::Timestamp;
 use std::collections::HashSet;
 use std::net::IpAddr;
 
@@ -72,12 +73,18 @@ pub fn detect_odd_users<'a>(entries: &[AuthEntry<'a>]) -> Vec<OddUser<'a>> {
     found
 }
 
-/// Les `Accepted` sans ouverture de session du même processus (même serveur, même PID).
-/// sshd écrit toujours les deux ; une ligne forgée n'a pas sa suite.
+/// Les `Accepted` sans session du même processus (même serveur, même PID). sshd écrit
+/// toujours l'ouverture puis la fermeture ; une ligne forgée n'a ni l'une ni l'autre.
+/// La fermeture compte aussi : l'ouverture peut faire partie des lignes corrompues.
 pub fn detect_ghost_logins<'a>(entries: &[AuthEntry<'a>]) -> Vec<AuthEntry<'a>> {
     let sessions: HashSet<(&str, Option<u32>)> = entries
         .iter()
-        .filter(|e| matches!(e.event, AuthEvent::SessionOpened { .. }))
+        .filter(|e| {
+            matches!(
+                e.event,
+                AuthEvent::SessionOpened { .. } | AuthEvent::SessionClosed { .. }
+            )
+        })
         .map(|e| (e.host, e.pid))
         .collect();
     entries
@@ -86,4 +93,54 @@ pub fn detect_ghost_logins<'a>(entries: &[AuthEntry<'a>]) -> Vec<AuthEntry<'a>> 
         .filter(|e| !sessions.contains(&(e.host, e.pid)))
         .copied()
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::journal::parse_auth;
+    use sentinelle_gen::{Dataset, Options};
+
+    fn dataset(injection: bool) -> Dataset {
+        Dataset::generate(&Options {
+            users: 40,
+            noise: 0.3,
+            injection,
+            ..Options::default()
+        })
+    }
+
+    #[test]
+    fn trapped_names_and_forged_logins_are_detected() {
+        let data = dataset(true);
+        let ip = IpAddr::V4(data.generated.injection.as_ref().unwrap().ip);
+        let auth = parse_auth(&data.auth);
+
+        let odd = detect_odd_users(&auth.entries);
+        let oddities: Vec<_> = odd.iter().map(|o| o.oddity).collect();
+        assert_eq!(
+            oddities,
+            [
+                Oddity::NonAscii,
+                Oddity::NonAscii,
+                Oddity::Invisible,
+                Oddity::Invisible
+            ]
+        );
+        assert!(odd.iter().all(|o| o.ip == Some(ip)));
+
+        let ghosts = detect_ghost_logins(&auth.entries);
+        assert_eq!(ghosts.len(), 2);
+        assert!(ghosts.iter().all(
+            |g| matches!(g.event, AuthEvent::Accepted { user: "root", ip: from, .. } if from == ip)
+        ));
+    }
+
+    #[test]
+    fn nothing_without_the_option() {
+        let data = dataset(false);
+        let auth = parse_auth(&data.auth);
+        assert!(detect_odd_users(&auth.entries).is_empty());
+        assert!(detect_ghost_logins(&auth.entries).is_empty());
+    }
 }

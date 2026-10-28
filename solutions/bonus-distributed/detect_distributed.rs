@@ -1,8 +1,9 @@
 // Bonus « force brute distribuée » : étapes 2 et 3 de docs/bonus/distributed.md.
-// À ajouter à `sentinelle/src/detect.rs` (ou dans un module à part).
+// À ajouter à `sentinelle/src/detect.rs` (ou dans un module à part). Compilé et testé
+// dans le corrigé par `cargo test -p sentinelle --features bonus`.
 
-use sentinelle::auth::{AuthEntry, AuthEvent};
-use sentinelle::time::Timestamp;
+use crate::auth::{AuthEntry, AuthEvent};
+use crate::time::Timestamp;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::net::IpAddr;
 
@@ -54,14 +55,24 @@ pub struct AccountBruteForce<'a> {
 /// venant d'au moins `min_ips` adresses distinctes. Même logique que `detect_bruteforce`
 /// (étape 5), avec le compte pour clé au lieu de l'adresse.
 ///
-/// Les échecs sur un compte inexistant (`invalid user`) sont ignorés : ils ne mènent à
-/// aucune connexion, et le bruit d'Internet en produit sans cesse (`admin`, `pi`, `test`…).
+/// Seuls comptent les comptes qui ouvrent au moins une session SSH dans le journal. Le
+/// bruit d'Internet vise sans cesse des comptes inexistants (`admin`, `pi`, `test`…) et
+/// `root`, qui existe mais ne se connecte jamais par SSH : sans ce filtre, ses rafales
+/// noient les autres.
 pub fn detect_account_bruteforce<'a>(
     entries: &[AuthEntry<'a>],
     window: i64,
     threshold: usize,
     min_ips: usize,
 ) -> Vec<AccountBruteForce<'a>> {
+    // premier passage : les comptes réellement utilisés
+    let active: HashSet<&str> = entries
+        .iter()
+        .filter_map(|entry| match entry.event {
+            AuthEvent::SessionOpened { user } => Some(user),
+            _ => None,
+        })
+        .collect();
     let mut recent: HashMap<&str, Recent> = HashMap::new();
     // la rafale en cours de chaque compte, avec l'ensemble de ses adresses
     let mut open: HashMap<&str, (AccountBruteForce<'a>, HashSet<IpAddr>)> = HashMap::new();
@@ -71,14 +82,12 @@ pub fn detect_account_bruteforce<'a>(
         burst
     };
     for entry in entries {
-        let AuthEvent::Failed {
-            user,
-            ip,
-            invalid_user: false,
-        } = entry.event
-        else {
+        let AuthEvent::Failed { user, ip, .. } = entry.event else {
             continue;
         };
+        if !active.contains(user) {
+            continue;
+        }
         let now = entry.timestamp;
         let window_of = recent.entry(user).or_default();
         window_of.push(now, ip);
@@ -173,4 +182,57 @@ pub fn detect_account_compromise<'a>(
         }
     }
     found
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::journal::parse_auth;
+    use crate::time::{HOUR, MINUTE};
+    use sentinelle_gen::{Dataset, Options};
+
+    fn dataset(distributed: bool) -> Dataset {
+        Dataset::generate(&Options {
+            users: 40,
+            noise: 0.3,
+            distributed,
+            ..Options::default()
+        })
+    }
+
+    #[test]
+    fn a_botnet_is_seen_through_the_account() {
+        let data = dataset(true);
+        let s = &data.generated.scenario;
+        let victim = data.generated.world.users[s.victim].name.as_str();
+        let auth = parse_auth(&data.auth);
+
+        let bursts = detect_account_bruteforce(&auth.entries, 5 * MINUTE, 20, 5);
+        assert_eq!(bursts.len(), 1);
+        assert_eq!(bursts[0].user, victim);
+        assert_eq!(bursts[0].failures, s.brute.2 as usize);
+        assert_eq!(bursts[0].ips, s.bots.len());
+
+        let compromises = detect_account_compromise(&auth.entries, HOUR, 10);
+        assert_eq!(compromises.len(), 1, "le rebond n'est pas rapporté");
+        let c = &compromises[0];
+        assert_eq!((c.user, c.at), (victim, s.compromise));
+        assert_eq!(c.ip, IpAddr::V4(s.brute_ip));
+        assert_eq!(c.ips, s.bots.len());
+        assert!(!c.from_failing_ip);
+    }
+
+    #[test]
+    fn a_single_address_is_seen_too() {
+        let data = dataset(false);
+        let s = &data.generated.scenario;
+        let auth = parse_auth(&data.auth);
+        // une seule adresse : sous le seuil d'adresses distinctes
+        assert!(detect_account_bruteforce(&auth.entries, 5 * MINUTE, 20, 5).is_empty());
+        let compromises = detect_account_compromise(&auth.entries, HOUR, 10);
+        assert_eq!(compromises.len(), 1);
+        assert_eq!(compromises[0].at, s.compromise);
+        assert_eq!(compromises[0].ips, 1);
+        assert!(compromises[0].from_failing_ip);
+    }
 }

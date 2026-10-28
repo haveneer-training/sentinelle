@@ -48,6 +48,8 @@ Sentinelle signale une nouvelle compromission, sur `root` cette fois. Est-elle r
   main : `U+200B` à `U+200F`, `U+202A` à `U+202E`, `U+2066` à `U+2069`, `U+FEFF`.
 - `str::escape_debug` renvoie un itérateur qui implémente `Display` : il s'utilise
   directement dans `format_args!`, sans `String` intermédiaire.
+- Essayez vos détections sur un gros jeu (`--users 2000 --noise 10 --injection`) : des
+  lignes y sont corrompues, une ouverture de session peut manquer.
 
 ## Vérifier
 

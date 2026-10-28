@@ -1,4 +1,6 @@
 //! `sentinelle [DIR] [--threads N]` : analyse `DIR/auth.log` et `DIR/access.log`.
+//!
+//! Avec la feature `bonus`, ajoute les détections des corrigés des bonus (`docs/bonus/`).
 
 use sentinelle::detect::{Config, analyze, failures_by_ip, top_n};
 use sentinelle::journal::{load, parse_auth, parse_web};
@@ -62,6 +64,8 @@ fn main() -> ExitCode {
     for alert in analyze(&auth.entries, &web.entries, &config) {
         println!("{alert}");
     }
+    #[cfg(feature = "bonus")]
+    print_bonus(&auth.entries);
     eprintln!(
         "\nlecture et analyse syntaxique : {parsed:.1?}, total : {:.1?}",
         started.elapsed()
@@ -77,4 +81,62 @@ fn main() -> ExitCode {
         );
     }
     ExitCode::SUCCESS
+}
+
+/// Les détections des bonus, à part de la chronologie.
+#[cfg(feature = "bonus")]
+fn print_bonus(entries: &[sentinelle::auth::AuthEntry<'_>]) {
+    use sentinelle::auth::AuthEvent;
+    use sentinelle::bonus_distributed::{detect_account_bruteforce, detect_account_compromise};
+    use sentinelle::bonus_injection::{detect_ghost_logins, detect_odd_users};
+    use sentinelle::time::{HOUR, Iso, MINUTE};
+
+    let addresses = |n: usize| format!("{n} adresse{}", if n > 1 { "s" } else { "" });
+
+    println!("\n--- Bonus : détections par compte, noms piégés ---");
+    for burst in detect_account_bruteforce(entries, 5 * MINUTE, 20, 5) {
+        println!(
+            "{}  force brute/compte {} : {} échecs de {} jusqu'à {}",
+            Iso(burst.first),
+            burst.user,
+            burst.failures,
+            addresses(burst.ips),
+            Iso(burst.last)
+        );
+    }
+    for c in detect_account_compromise(entries, HOUR, 10) {
+        let origin = if c.from_failing_ip {
+            "en échec"
+        } else {
+            "jamais en échec"
+        };
+        println!(
+            "{}  COMPROMISSION/compte {} sur {} depuis {} ({origin}) après {} échecs de {}",
+            Iso(c.at),
+            c.user,
+            c.host,
+            c.ip,
+            c.failures,
+            addresses(c.ips)
+        );
+    }
+    for odd in detect_odd_users(entries) {
+        // `{:?}` : `{}` laisserait le terminal interpréter les caractères piégés
+        let from = odd.ip.map_or("?".to_string(), |ip| ip.to_string());
+        println!(
+            "{}  nom suspect         {:?} ({:?}) depuis {from}",
+            Iso(odd.at),
+            odd.user,
+            odd.oddity
+        );
+    }
+    for ghost in detect_ghost_logins(entries) {
+        if let AuthEvent::Accepted { user, ip, .. } = ghost.event {
+            println!(
+                "{}  connexion fantôme   {user} sur {} depuis {ip}, sans session",
+                Iso(ghost.timestamp),
+                ghost.host
+            );
+        }
+    }
 }

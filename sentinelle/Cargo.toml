@@ -30,6 +30,10 @@ step8 = ["step7"]
 step9 = ["step8"]
 step10 = ["step9"]
 step11 = ["step10"]
+# Les corrigés des bonus (`docs/bonus/`), avec leurs tests : `cargo test --features bonus`.
+# Ils vivent dans `solutions/`, que les dossiers de travail n'ont pas : la feature n'y
+# sert à rien.
+bonus = ["step6"]
 
 [dependencies]
 

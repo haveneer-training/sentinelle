@@ -43,9 +43,12 @@ caractères imprimables ordinaires. D'où les trois catégories de la détection
 
 [`detect_injection.rs`](detect_injection.rs) : `oddity` et `detect_odd_users` (noms
 suspects, rapportés une fois chacun), `detect_ghost_logins` (`Accepted` dont le couple
-(serveur, PID) n'a jamais d'ouverture de session). Sur le jeu par défaut, les deux
+(serveur, PID) n'a ni ouverture ni fermeture de session : l'ouverture seule ne suffit
+pas, elle peut faire partie des lignes corrompues, ce qui donne 7 fausses alertes sur un
+jeu de 100 Mo). Sur le jeu par défaut, les deux
 détections ne trouvent rien ; avec `--injection`, 4 noms suspects et 2 connexions
-fantômes.
+fantômes. Le fichier est compilé et testé dans le fil rouge avec la feature `bonus`
+(`cargo test -p sentinelle --features bonus`).
 
 ## 5. Corriger à la source
 

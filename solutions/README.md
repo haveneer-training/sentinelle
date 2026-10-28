@@ -86,6 +86,10 @@ cargo run --release -q -p sentinelle -- data-officiel 2>/dev/null \
   | grep -E 'password spraying|force brute|COMPROMISSION|volume anormal'
 ```
 
+Avec `--features bonus`, `sentinelle` ajoute après la chronologie les détections des
+corrigés des bonus (`force brute/compte`, `COMPROMISSION/compte`, noms suspects,
+connexions fantômes) : le même filtre attrape les deux premières.
+
 Il reste une poignée de lignes : la force brute, puis la `COMPROMISSION` depuis la même
 adresse quelques secondes après la dernière tentative, et le `volume anormal`. Le compte de
 la victime y apparaît. On le suit ensuite dans la sortie complète
