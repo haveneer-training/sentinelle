@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Vérifie le dispositif de travail étape par étape : régénère travail/, puis pour
-# chaque étape 0..LAST_STEP (croissant), goto 0 puis next doivent compiler et laisser
-# cargo test rouge sur l'étape n seulement (les todo!() atteints sont tous ceux de
-# l'étape n, jamais d'une étape antérieure) ; solve <n> doit ensuite ramener cargo test
-# au vert. Au-delà de la dernière étape, next doit refuser sans rien changer.
+# Vérifie le dispositif de travail étape par étape : engendre un dossier de travail
+# temporaire (le travail/ du dépôt n'est pas touché), puis pour chaque étape
+# 0..LAST_STEP (croissant), goto 0 puis next doivent compiler et laisser cargo test rouge
+# sur l'étape n seulement (les todo!() atteints sont tous ceux de l'étape n, jamais d'une
+# étape antérieure) ; solve <n> doit ensuite ramener cargo test au vert. Au-delà de la
+# dernière étape, goto et next doivent refuser sans rien changer.
 # À la dernière étape : aucun avertissement, l'analyse complète tourne sur un jeu de
 # données généré, et reset/solve rouvrent puis referment bien un trou.
 #
@@ -12,12 +13,6 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$root"
-
-last_step="$(sed -n 's/.*LAST_STEP: u8 = \([0-9][0-9]*\);.*/\1/p' xtask/src/main.rs)"
-if [ -z "$last_step" ]; then
-    echo "!! LAST_STEP introuvable dans xtask/src/main.rs" >&2
-    exit 1
-fi
 
 red=$'\033[31m'
 green=$'\033[32m'
@@ -31,9 +26,17 @@ ok() {
     echo "   ${green}ok${reset} $*"
 }
 
+# La dernière étape, déduite du manifeste : sa feature `stepN` la plus haute est la
+# sentinelle, LAST_STEP + 1 (le test the_manifest_ends_with_the_sentinel de xtask le
+# garantit ; goto et next le confirment ci-dessous).
+sentinel="$(sed -n 's/^step\([0-9][0-9]*\) = .*/\1/p' sentinelle/Cargo.toml | sort -n | tail -1)"
+[ -n "$sentinel" ] || fail "aucune feature stepN dans sentinelle/Cargo.toml"
+last_step=$((sentinel - 1))
+
+work="$(mktemp -d)"
 cleanup() {
     cd "$root"
-    rm -rf travail
+    rm -rf "$work"
 }
 trap cleanup EXIT
 
@@ -43,13 +46,21 @@ reached_steps() {
 }
 
 echo "==> étapes 0 à ${last_step}"
-echo "==> cargo xtask start --force"
-cargo xtask start --force >/dev/null
-cd "$root/travail"
+echo "==> cargo xtask start --dir ${work}/travail"
+cargo xtask start --dir "$work/travail" >/dev/null
+cd "$work/travail"
 [ ! -e solutions ] || fail "travail/ contient solutions/ : il ne doit jamais être copié"
 cmp -s rust-toolchain.toml "$root/rust-toolchain.toml" \
     || fail "travail/ n'a pas la même toolchain épinglée (rust-toolchain.toml) que le dépôt"
 ok "travail/ engendré, sans solutions/, même toolchain ($(rustc --version | cut -d' ' -f2))"
+
+echo "==> goto refuse l'étape ${sentinel}, qui n'existe pas encore"
+if cargo xtask goto "$sentinel" >/dev/null 2>&1; then
+    fail "cargo xtask goto ${sentinel} réussit : LAST_STEP de xtask et sentinelle/Cargo.toml divergent"
+fi
+grep -qx 'default = \["step0"\]' sentinelle/Cargo.toml \
+    || fail "goto ${sentinel} a modifié l'étape courante alors qu'il a échoué"
+ok "goto ${sentinel} refusé, toujours à l'étape 0"
 
 for n in $(seq 0 "$last_step"); do
     echo "==> étape ${n}"

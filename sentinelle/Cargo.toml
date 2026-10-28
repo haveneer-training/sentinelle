@@ -13,7 +13,8 @@ authors.workspace = true
 # `cargo xtask goto <n>` ne fait rien d'autre que réécrire la ligne `default`.
 #
 # `step11` est la **sentinelle** : l'étape qui suit la dernière implémentée (`LAST_STEP`
-# dans `xtask/src/main.rs`). Aucun code n'en dépend ; elle sert à écrire
+# dans `xtask/src/steps.rs`, que `scripts/check-steps.sh` déduit d'ici : la feature
+# `stepN` la plus haute doit rester la sentinelle). Aucun code n'en dépend ; elle sert à écrire
 # `not(feature = "step11")` sur les avertissements collatéraux des trous de la dernière
 # étape : vraie dans un dossier de travail, fausse ici.
 [features]
