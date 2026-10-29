@@ -17,7 +17,10 @@ const LOOKALIKES: &[&str] = &[
     "r\u{43E}\u{43E}t", // deux « о » cyrilliques
     "\u{430}dmin",      // « а » cyrillique
     "admin\u{200B}",    // espace sans chasse à la fin
-    "\u{202E}toor",     // inversion bidirectionnelle : s'affiche « root »
+    // inversion bidirectionnelle, volontairement sans U+202C (PDF) pour la refermer : seul
+    // sur sa ligne, le nom s'affiche « root » ; dans `auth.log`, un afficheur bidi inverse
+    // toute la fin de la ligne (« Invalid user 43215 trop 7.2.0.291 morf root » : IP illisible)
+    "\u{202E}toor",
 ];
 
 pub struct Injection {

@@ -35,7 +35,9 @@ indices :
 ## 2. Afficher
 
 Avec `{}`, `"\u{202e}toor"` s'affiche `root` (le contrôle bidirectionnel inverse la suite)
-et `"admin\u{200b}"` s'affiche `admin`. Avec `{:?}`, les deux sont échappés. `{:?}`
+et `"admin\u{200b}"` s'affiche `admin`. Rien ne referme l'inversion (pas de `U+202C`) :
+dans `auth.log`, un afficheur qui gère le bidirectionnel inverse donc toute la fin de la
+ligne, `Invalid user 43215 trop 7.2.0.291 morf root`, et l'adresse devient illisible. Avec `{:?}`, les deux sont échappés. `{:?}`
 laisse en revanche `"rооt"` et `"аdmin"` intacts : leurs lettres cyrilliques sont des
 caractères imprimables ordinaires. D'où les trois catégories de la détection.
 
