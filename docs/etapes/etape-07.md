@@ -43,5 +43,5 @@ Détectez-le : pour chaque serveur, comptez les lignes dont l'instant recule par
 
 ## Diapositives
 
-« Les conteneurs basiques 4/4 : structures associatives » ; « Arbre de décision pour
-choisir son container ».
+« Les conteneurs basiques 4/4 : structures associatives » ; « Complexité des opérations
+courantes ».
