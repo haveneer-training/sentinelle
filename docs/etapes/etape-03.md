@@ -34,9 +34,11 @@ cargo test --test step3_journal
 
 Écrivez une version paresseuse, qui ne construit pas de `Vec` :
 `fn entries(text: &[u8]) -> impl Iterator<Item = Result<AuthEntry<'_>, ParseError>>`.
-Qu'a changé l'édition 2024 dans la capture des durées de vie par `impl Trait` ?
+Qu'a changé l'édition 2024 dans la capture des durées de vie par `impl Trait` ? Voir
+[*RPIT lifetime capture rules*](https://doc.rust-lang.org/edition-guide/rust-2024/rpit-lifetime-capture.html)
+dans l'*Edition Guide*.
 
 ## Diapositives
 
 « Des octets au texte : l'UTF-8 aux frontières » (Les chaînes de caractères) ; « Les
-annotations explicites », « Nuance entre `+'a` et `+ use<'a>` » (Lifetime et borrowing avancé).
+annotations explicites » (Lifetime et borrowing avancé).
